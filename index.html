@@ -66,7 +66,7 @@
         <div class="text-[9px] font-bold text-amber-300 uppercase tracking-widest border border-amber-600/40 px-2 py-0.5 rounded bg-amber-900/40" id="nav-school">SDN 4 Rambutan</div>
     </div>
 
-    <!-- Banner Notifikasi Sanksi Spesifik (Akan dipindahkan kontrolnya langsung ke halaman siswa) -->
+    <!-- Banner Notifikasi Sanksi Spesifik -->
     <div id="sanction-banner" class="hidden bg-rose-600 text-white px-4 py-2 text-center text-[11px] font-black tracking-wide flex items-center justify-center gap-2 z-25 relative shadow-md">
         <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
         <span id="sanction-banner-text">SANKSI AKTIF! BEBERAPA FITUR TERKUNCI.</span>
@@ -99,6 +99,50 @@
         <i class="fa-solid fa-compass fa-spin text-5xl text-amber-400 mb-4 drop-shadow-lg"></i>
         <h2 class="title-font font-black text-xl text-white tracking-widest drop-shadow-md">MEMUAT DATA...</h2>
         <p class="text-[10px] text-amber-200 font-bold uppercase mt-2" id="loading-text">Menghubungkan ke Pusat Komando</p>
+    </div>
+
+    <!-- FAB Chat untuk Siswa -->
+    <div id="student-chat-fab" class="fixed bottom-24 right-4 z-[100] hidden">
+        <button onclick="openChatContacts()" class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(79,70,229,0.5)] border-2 border-indigo-400 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all">
+            <i class="fa-solid fa-comments text-2xl"></i>
+            <span id="student-unread-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white hidden">0</span>
+        </button>
+    </div>
+
+    <!-- Chat Contacts / Room Modal UI -->
+    <div id="chat-modal" class="fixed inset-0 z-[130] bg-black/60 hidden flex flex-col justify-end sm:justify-center sm:p-4 transition-all">
+        <div class="bg-white w-full sm:max-w-md sm:mx-auto sm:rounded-2xl rounded-t-2xl h-[85vh] sm:h-[600px] flex flex-col relative shadow-2xl overflow-hidden">
+            
+            <!-- Header Mode Kontak vs Room -->
+            <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md z-10 shrink-0">
+                <div class="flex items-center gap-3">
+                    <button id="chat-back-btn" onclick="openChatContacts()" class="hidden w-8 h-8 flex items-center justify-center bg-indigo-700 rounded-full hover:bg-indigo-800"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div id="chat-modal-avatar" class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-xl border border-indigo-400 overflow-hidden">💬</div>
+                    <div>
+                        <h3 class="font-black text-sm" id="chat-modal-name">Hubungi Seseorang</h3>
+                        <p class="text-[10px] text-indigo-200 font-bold uppercase" id="chat-modal-role">Daftar Kontak</p>
+                    </div>
+                </div>
+                <button onclick="closeChatModal()" class="w-8 h-8 flex items-center justify-center bg-indigo-700 rounded-full hover:bg-indigo-800"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Panel: Daftar Kontak -->
+            <div id="chat-contacts-panel" class="flex-1 overflow-y-auto bg-slate-50 p-4 space-y-2 block">
+                <!-- Diisi oleh JS -->
+            </div>
+
+            <!-- Panel: Ruang Obrolan -->
+            <div id="chat-room-panel" class="flex-1 flex flex-col hidden bg-slate-50 relative">
+                <div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col">
+                    <!-- Chat Messages rendered here -->
+                </div>
+                <div class="p-3 bg-white border-t border-slate-200 flex items-center gap-2 pb-5 sm:pb-3 shrink-0">
+                    <input type="text" id="chat-input-text" placeholder="Ketik pesan di sini..." onkeypress="if(event.key === 'Enter') sendChatMessage()" class="flex-1 bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500">
+                    <button onclick="sendChatMessage()" class="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-indigo-700 active:scale-95 transition-all shrink-0"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <!-- Panduan Modal -->
@@ -394,16 +438,23 @@
         insertShopClaim: (data) => DatabaseService.executeOperation('Insert Shop Claim', supabaseClient.from('shop_claims').insert([data])),
         insertLoggedSanction: (data) => DatabaseService.executeOperation('Insert Logged Sanction', supabaseClient.from('logged_sanctions').insert([data])),
         
+        // NEW FEATURES API: Finances & Messages
+        insertFinance: (data) => DatabaseService.executeOperation('Insert Finance', supabaseClient.from('regu_finances').insert([data])),
+        insertMessage: (data) => DatabaseService.executeOperation('Insert Message', supabaseClient.from('messages').insert([data])),
+        
         // --- UPDATE SPECIFIC ---
         updateShopClaimStatus: (id, status) => DatabaseService.executeOperation('Update Claim Status', supabaseClient.from('shop_claims').update({ status }).eq('id', id)),
         updateSanctionResolved: (id) => DatabaseService.executeOperation('Resolve Sanction', supabaseClient.from('logged_sanctions').update({ resolved: true }).eq('id', id)),
+        updateMessageRead: (receiverId, senderId) => DatabaseService.executeOperation('Update Message Read', supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', receiverId).eq('sender_id', senderId)),
+        updateGroupMessageRead: (receiverId) => DatabaseService.executeOperation('Update Group Message Read', supabaseClient.from('messages').update({ is_read: true }).eq('receiver_id', receiverId)),
         
         // --- DELETE ---
         deleteStudent: (id) => DatabaseService.executeOperation('Delete Student', supabaseClient.from('students').delete().eq('id', id)),
         deleteQuest: (id) => DatabaseService.executeOperation('Delete Quest', supabaseClient.from('quests').delete().eq('id', id)),
         deleteShopItem: (id) => DatabaseService.executeOperation('Delete Shop Item', supabaseClient.from('shop_items').delete().eq('id', id)),
         deleteSanctionRule: (id) => DatabaseService.executeOperation('Delete Sanction Rule', supabaseClient.from('sanction_rules').delete().eq('id', id)),
-        deleteAttendanceForDate: (date) => DatabaseService.executeOperation('Delete Attendance', supabaseClient.from('attendance_logs').delete().eq('date', date))
+        deleteAttendanceForDate: (date) => DatabaseService.executeOperation('Delete Attendance', supabaseClient.from('attendance_logs').delete().eq('date', date)),
+        deleteFinance: (id) => DatabaseService.executeOperation('Delete Finance', supabaseClient.from('regu_finances').delete().eq('id', id))
     };
 
     // Kustomisasi Judul/Logo Aplikasi (CRUD Identitas)
@@ -416,9 +467,10 @@
 
     const defaultAppConfig = {
         appTitle: "PRAPATRA QUEST",
-        appVersion: "4.1.0",
+        appVersion: "4.4.0",
         schoolName: "SDN 4 Rambutan",
-        appLogo: "⚜️"
+        appLogo: "⚜️",
+        adminAvatar: "👮‍♂️"
     };
     
     let currentAppConfig = {...defaultAppConfig};
@@ -482,6 +534,21 @@
         });
     }
 
+    async function handleAdminAvatarUpload(input) {
+        if (input.files && input.files[0]) {
+            const base64Data = await resizeImage(input.files[0]);
+            document.getElementById('cfg-admin-avatar-data').value = base64Data;
+            document.getElementById('cfg-admin-avatar-preview').innerHTML = renderAvatar(base64Data);
+            document.getElementById('cfg-admin-emoji').value = '';
+        }
+    }
+
+    function resetAdminAvatar() {
+        document.getElementById('cfg-admin-avatar-data').value = '👮‍♂️';
+        document.getElementById('cfg-admin-avatar-preview').innerHTML = renderAvatar('👮‍♂️');
+        document.getElementById('cfg-admin-emoji').value = '';
+    }
+
     document.getElementById('form-student-photo').addEventListener('change', async function() {
         const file = this.files[0];
         if (file) {
@@ -500,7 +567,6 @@
         }
     });
 
-    // Event Listener Logo Regu Admin
     document.getElementById('form-regu-logo').addEventListener('change', async function() {
         const file = this.files[0];
         if (file) {
@@ -510,6 +576,14 @@
             document.getElementById('form-regu-emoji').value = '';
         }
     });
+
+    // Struktur Absen Constant (Dipindahkan ke atas agar dapat diakses semua fungsi)
+    const attendanceTypes = { 
+        'ontime': { label: 'Hadir', xp: 8, color: 'bg-emerald-500' }, 
+        'late': { label: 'Telat', xp: 4, color: 'bg-amber-500' }, 
+        'excused': { label: 'Izin', xp: 2, color: 'bg-blue-500' }, 
+        'absent': { label: 'Alpa', xp: 0, color: 'bg-rose-500' } 
+    };
 
     // ==========================================
     async function asyncSyncStudent(s) {
@@ -582,6 +656,8 @@
               attendanceStats: { present: 8, late: 1, sick: 1, absent: 0 }, attendanceXP: 70, bonusXP: 50, avatarEmoji: '🦁', isRecommended: true, xpHistory: [] }
         ],
         attendanceLog: {}, shopItems: [], sanctionRules: [], reguSanctionsLog: [], shopClaims: [],
+        finances: [], messages: [],
+        activeChatContactId: null, activeChatContactType: null, chatSyncTimer: null,
         avatarOptions: [ { id: '1', emoji: '🦁' }, { id: '2', emoji: '🦊' }, { id: '3', emoji: '🦉' }, { id: '4', emoji: '🐯' }, { id: '5', emoji: '🦅' }, { id: '6', emoji: '🐻' }, { id: '7', emoji: '🐰' }, { id: '8', emoji: '🐼' } ]
     };
 
@@ -607,16 +683,18 @@
         }
 
         try {
-            // Melakukan Fetch paralel menggunakan DatabaseService (Atau akses langsung client untuk read-only batch)
             const [ 
                 {data: reguData}, {data: studentData}, {data: questData}, {data: shopData}, 
-                {data: sanctionData}, {data: logData}, {data: claimsData}, {data: configData}, {data: attLogsData} 
+                {data: sanctionData}, {data: logData}, {data: claimsData}, {data: configData}, {data: attLogsData},
+                {data: financesData}, {data: messagesData}
             ] = await Promise.all([
                 supabaseClient.from('regus').select('*'), supabaseClient.from('students').select('*'),
                 supabaseClient.from('quests').select('*'), supabaseClient.from('shop_items').select('*'),
                 supabaseClient.from('sanction_rules').select('*'), supabaseClient.from('logged_sanctions').select('*'),
                 supabaseClient.from('shop_claims').select('*'), supabaseClient.from('app_config').select('*'),
-                supabaseClient.from('attendance_logs').select('*')
+                supabaseClient.from('attendance_logs').select('*'),
+                supabaseClient.from('regu_finances').select('*').order('created_at', {ascending: false}), 
+                supabaseClient.from('messages').select('*').order('created_at', {ascending: true})
             ]);
 
             if (configData && configData.length > 0) {
@@ -634,7 +712,6 @@
                 attLogsData.forEach(al => { state.attendanceLog[al.date] = al.logs || {}; });
             }
 
-            // Jika Kosong, isi data Dummy Awal untuk Setup Cepat
             if ((!reguData || reguData.length === 0) && (!studentData || studentData.length === 0)) {
                 console.log("Database Kosong! Memasukkan data demo awal...");
                 document.getElementById('loading-text').innerText = "Membangun Data Master Cloud...";
@@ -660,15 +737,19 @@
                 state.sanctionRules = defSanc.map(s => ({ id: s.id, type: s.type, label: s.label, xpPenalty: s.xp_penalty, coinPenalty: s.coin_penalty }));
                 state.shopClaims = [];
             } else {
-                // Parsing Data Cloud ke State Lokal
                 state.regus = {};
                 reguData.forEach(r => { state.regus[r.name] = { coins: r.coins, totalLostCoins: r.total_lost_coins, targetReward: r.target_reward, logs: r.logs || [], logo: r.logo || '🛡️' }; });
                 
                 state.students = studentData.map(s => ({
                     id: s.id, name: s.name, kelas: s.kelas, gender: s.gender, regu: s.regu_name, jabatan: s.jabatan, 
-                    xp: s.xp, lifetimeXP: s.lifetime_xp || s.xp || 0, coins: s.coins,
+                    xp: s.xp || 0, lifetimeXP: s.lifetime_xp || s.xp || 0, coins: s.coins || 0,
                     completedQuests: (s.completed_quests || []).map(q => typeof q === 'object' ? q : { id: q.toString(), status: 'completed' }),
-                    attendanceStats: s.attendance_stats || { present: 0, late: 0, sick: 0, absent: 0 }, attendanceXP: s.attendance_xp, bonusXP: s.bonus_xp, avatarEmoji: s.avatar_emoji, isRecommended: s.is_recommended, xpHistory: s.xp_history || []
+                    attendanceStats: s.attendance_stats || { present: 0, late: 0, sick: 0, absent: 0 }, 
+                    attendanceXP: s.attendance_xp || 0, 
+                    bonusXP: s.bonus_xp || 0, 
+                    avatarEmoji: s.avatar_emoji, 
+                    isRecommended: s.is_recommended || false, 
+                    xpHistory: s.xp_history || []
                 }));
 
                 state.quests = (questData || []).map(q => ({ id: q.id.toString(), poin: q.poin, title: q.title, desc: q.desc, diff: q.diff, xp: q.xp }));
@@ -676,6 +757,8 @@
                 state.sanctionRules = (sanctionData || []).map(s => ({ id: s.id.toString(), type: s.type, label: s.label, xpPenalty: s.xp_penalty, coinPenalty: s.coin_penalty }));
                 state.reguSanctionsLog = (logData || []).map(l => ({ id: l.id, studentId: l.student_id, regu: l.regu, type: l.type, reason: l.reason, xpPenalty: l.xp_penalty, coinPenalty: l.coin_penalty, resolved: l.resolved, date: l.date, maxRecoverable: l.max_recoverable }));
                 state.shopClaims = (claimsData || []).map(c => ({ id: c.id, studentId: c.student_id, itemId: c.item_id, itemName: c.item_name, cost: c.cost, claimType: c.claim_type, regu: c.regu, note: c.note, status: c.status, date: c.date }));
+                state.finances = (financesData || []).map(f => ({ id: f.id, reguName: f.regu_name, type: f.type, amount: f.amount, description: f.description, date: f.date }));
+                state.messages = (messagesData || []);
             }
         } catch (e) {
             console.error("Load Error:", e);
@@ -683,6 +766,19 @@
         }
         document.getElementById('loading-overlay').classList.add('opacity-0', 'pointer-events-none');
         renderMainView();
+        
+        // Background sync for chat
+        setInterval(async () => {
+            if (supabaseClient && document.getElementById('chat-modal').classList.contains('hidden') === false) {
+                const {data} = await supabaseClient.from('messages').select('*').order('created_at', {ascending: true});
+                if (data && data.length > state.messages.length) {
+                    state.messages = data;
+                    if (state.activeChatContactId) renderChatRoomMessages();
+                    else renderChatContactsList();
+                    updateStudentUnreadBadge();
+                }
+            }
+        }, 5000);
     };
 
     // ==========================================
@@ -745,6 +841,185 @@
     }
 
     // ==========================================
+    // 💬 SISTEM CHAT MULTI-JALUR
+    // ==========================================
+    function getUnreadMessagesCount(targetReceiverId, specificSenderId = null) {
+        return state.messages.filter(m => 
+            m.receiver_id === targetReceiverId && 
+            !m.is_read && 
+            (specificSenderId ? m.sender_id === specificSenderId : m.sender_id !== targetReceiverId)
+        ).length;
+    }
+
+    function updateStudentUnreadBadge() {
+        if (state.currentView !== 'student' || !state.currentUser) return;
+        const badge = document.getElementById('student-unread-badge');
+        
+        const myId = state.currentUser.id;
+        const myReguGroupId = 'regu_' + state.currentUser.regu;
+        
+        const unreadCount = state.messages.filter(m => 
+            !m.is_read && m.sender_id !== myId && 
+            (m.receiver_id === myId || m.receiver_id === myReguGroupId)
+        ).length;
+
+        if (unreadCount > 0) { badge.innerText = unreadCount; badge.classList.remove('hidden'); } 
+        else { badge.classList.add('hidden'); }
+    }
+
+    function openChatContacts() {
+        state.activeChatContactId = null;
+        document.getElementById('chat-modal-name').innerText = "Obrolan";
+        document.getElementById('chat-modal-role').innerText = "Pilih Kontak";
+        document.getElementById('chat-modal-avatar').innerHTML = "💬";
+        document.getElementById('chat-back-btn').classList.add('hidden');
+        
+        document.getElementById('chat-contacts-panel').classList.remove('hidden');
+        document.getElementById('chat-room-panel').classList.add('hidden');
+        document.getElementById('chat-modal').classList.remove('hidden');
+        
+        renderChatContactsList();
+        updateStudentUnreadBadge();
+    }
+
+    function renderChatContactsList() {
+        const container = document.getElementById('chat-contacts-panel');
+        let html = '';
+
+        if (state.currentView === 'student') {
+            const u = state.currentUser;
+            const reguGroupId = 'regu_' + u.regu;
+            
+            const unreadAdmin = getUnreadMessagesCount(u.id, 'admin');
+            html += generateContactCard('admin', 'Kakak Pembina', renderAvatar(currentAppConfig.adminAvatar || '👮‍♂️'), 'Admin Pusat', 'admin', unreadAdmin);
+            
+            const unreadGroup = state.messages.filter(m => m.receiver_id === reguGroupId && !m.is_read && m.sender_id !== u.id).length;
+            html += generateContactCard(reguGroupId, `Grup Regu ${u.regu}`, renderAvatar(state.regus[u.regu].logo || '🛡️'), 'Diskusi Regu', 'regu', unreadGroup);
+
+            html += `<h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4 mb-2">Anggota Regu</h4>`;
+            state.students.filter(s => s.regu === u.regu && s.id !== u.id).forEach(friend => {
+                const unreadPrivate = getUnreadMessagesCount(u.id, friend.id);
+                html += generateContactCard(friend.id, friend.name, renderAvatar(friend.avatarEmoji), friend.jabatan, 'student', unreadPrivate);
+            });
+
+        } else if (state.currentView === 'admin') {
+            html += `<h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Grup Regu</h4>`;
+            Object.keys(state.regus).forEach(rName => {
+                const gid = 'regu_' + rName;
+                html += generateContactCard(gid, `Grup Regu ${rName}`, renderAvatar(state.regus[rName].logo || '🛡️'), 'Broadcast Regu', 'regu', 0);
+            });
+
+            html += `<h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4 mb-2">Jalur Pribadi Siswa</h4>`;
+            state.students.forEach(s => {
+                const unread = getUnreadMessagesCount('admin', s.id);
+                html += generateContactCard(s.id, s.name, renderAvatar(s.avatarEmoji), `Regu ${s.regu}`, 'student', unread);
+            });
+        }
+        container.innerHTML = html;
+    }
+
+    function generateContactCard(id, name, avatarHtml, roleText, type, unreadCount) {
+        const badge = unreadCount > 0 ? `<span class="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[9px] font-black shrink-0">${unreadCount}</span>` : '';
+        return `
+        <div onclick="openChatRoom('${id}', '${name}', '${type}')" class="card-3d bg-white p-3 flex items-center gap-3 cursor-pointer hover:bg-indigo-50 border-l-4 ${unreadCount > 0 ? 'border-indigo-500' : 'border-transparent'} transition-all">
+            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-2xl shrink-0 overflow-hidden border border-slate-200">${avatarHtml}</div>
+            <div class="flex-1 min-w-0">
+                <h4 class="font-extrabold text-xs text-slate-800 truncate">${name}</h4>
+                <p class="text-[9px] font-bold text-slate-400 uppercase mt-0.5">${roleText}</p>
+            </div>
+            ${badge}
+        </div>`;
+    }
+
+    async function openChatRoom(contactId, contactName, contactType) {
+        state.activeChatContactId = contactId;
+        state.activeChatContactType = contactType;
+
+        document.getElementById('chat-modal-name').innerText = contactName;
+        document.getElementById('chat-modal-role').innerText = contactType === 'regu' ? "Grup Diskusi" : "Online";
+        
+        let avatarIcon = '💬';
+        if (contactId === 'admin') avatarIcon = renderAvatar(currentAppConfig.adminAvatar || '👮‍♂️');
+        else if (contactType === 'regu') { const rName = contactId.replace('regu_', ''); avatarIcon = renderAvatar(state.regus[rName]?.logo || '🛡️'); }
+        else { const st = state.students.find(s => s.id === contactId); if(st) avatarIcon = renderAvatar(st.avatarEmoji); }
+        document.getElementById('chat-modal-avatar').innerHTML = avatarIcon;
+
+        document.getElementById('chat-back-btn').classList.remove('hidden');
+        document.getElementById('chat-contacts-panel').classList.add('hidden');
+        document.getElementById('chat-room-panel').classList.remove('hidden');
+        document.getElementById('chat-room-panel').classList.add('flex');
+
+        renderChatRoomMessages();
+
+        const myId = state.currentView === 'admin' ? 'admin' : state.currentUser.id;
+        const msgsToRead = state.messages.filter(m => 
+            !m.is_read && 
+            m.receiver_id === (contactType === 'regu' ? contactId : myId) &&
+            m.sender_id !== myId && 
+            (contactType === 'regu' ? true : m.sender_id === contactId)
+        );
+
+        if (msgsToRead.length > 0) {
+            msgsToRead.forEach(m => m.is_read = true);
+            if (contactType === 'regu') await DatabaseService.updateGroupMessageRead(contactId);
+            else await DatabaseService.updateMessageRead(myId, contactId);
+            if(state.currentView === 'student') updateStudentUnreadBadge();
+        }
+    }
+
+    function renderChatRoomMessages() {
+        const container = document.getElementById('chat-messages-container');
+        const myId = state.currentView === 'admin' ? 'admin' : state.currentUser.id;
+        const targetId = state.activeChatContactId;
+        const isGroup = state.activeChatContactType === 'regu';
+
+        const relevantMsgs = state.messages.filter(m => {
+            if (isGroup) return m.receiver_id === targetId;
+            return (m.sender_id === myId && m.receiver_id === targetId) || (m.sender_id === targetId && m.receiver_id === myId);
+        });
+        
+        let html = '';
+        relevantMsgs.forEach(m => {
+            const isMe = m.sender_id === myId;
+            const time = new Date(m.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+            
+            let senderNameLabel = '';
+            if (isGroup && !isMe) {
+                const senderObj = m.sender_id === 'admin' ? {name: 'Pembina'} : state.students.find(s => s.id === m.sender_id);
+                senderNameLabel = `<div class="text-[8px] font-black text-indigo-400 mb-0.5 uppercase">${senderObj?.name || 'Unknown'}</div>`;
+            }
+
+            if (isMe) {
+                html += `<div class="flex justify-end mb-2"><div class="max-w-[85%]"><div class="bg-indigo-600 text-white p-2.5 rounded-l-xl rounded-tr-xl text-xs font-semibold shadow-sm">${m.content}</div><div class="text-right text-[8px] font-bold text-slate-400 mt-1">${time} ${m.is_read && !isGroup ? '<i class="fa-solid fa-check-double text-indigo-400"></i>' : '<i class="fa-solid fa-check"></i>'}</div></div></div>`;
+            } else {
+                html += `<div class="flex justify-start mb-2"><div class="max-w-[85%]"><div class="bg-white border border-slate-200 text-slate-700 p-2.5 rounded-r-xl rounded-tl-xl text-xs font-semibold shadow-sm">${senderNameLabel}${m.content}</div><div class="text-left text-[8px] font-bold text-slate-400 mt-1">${time}</div></div></div>`;
+            }
+        });
+        
+        if (relevantMsgs.length === 0) html = `<div class="flex-1 flex flex-col items-center justify-center text-slate-400 opacity-50"><i class="fa-regular fa-comments text-4xl mb-2"></i><p class="text-xs font-bold">Mulai percakapan...</p></div>`;
+        container.innerHTML = html;
+        setTimeout(() => { container.scrollTop = container.scrollHeight; }, 10);
+    }
+
+    async function sendChatMessage() {
+        const input = document.getElementById('chat-input-text');
+        const text = input.value.trim();
+        if (!text || !state.activeChatContactId) return;
+        input.value = '';
+        
+        const myId = state.currentView === 'admin' ? 'admin' : state.currentUser.id;
+        const msg = { id: 'msg-' + Date.now() + '-' + Math.random(), sender_id: myId, receiver_id: state.activeChatContactId, content: text, is_read: false, created_at: new Date().toISOString() };
+        
+        state.messages.push(msg);
+        renderChatRoomMessages(); 
+        
+        const { error } = await DatabaseService.insertMessage(msg);
+        if (error) showToast("Gagal mengirim pesan", "❌");
+    }
+
+    function closeChatModal() { document.getElementById('chat-modal').classList.add('hidden'); }
+
+    // ==========================================
     // 🎨 UI RENDERING & TAB NAVIGASI
     // ==========================================
     function openPanduanModal() { document.getElementById('panduan-modal').classList.remove('hidden'); }
@@ -787,6 +1062,15 @@
     function renderMainView() {
         const main = document.getElementById('main-scene');
         document.getElementById('sanction-banner').classList.add('hidden');
+
+        // Menampilkan tombol Chat otomatis saat berada di halaman siswa
+        const chatFab = document.getElementById('student-chat-fab');
+        if (state.currentView === 'student') { 
+            chatFab.classList.remove('hidden'); 
+            updateStudentUnreadBadge(); 
+        } else { 
+            chatFab.classList.add('hidden'); 
+        }
 
         if (state.currentView === 'dashboard') renderDashboard(main);
         else if (state.currentView === 'student') renderStudentView(main);
@@ -977,14 +1261,34 @@
         }
     }
 
+    // Fungsi Statistik Presensi Murni dari Log Sesi
+    function getStudentAttendanceStats(studentId) {
+        let present = 0, late = 0, excused = 0, absent = 0;
+        const totalSessions = Object.keys(state.attendanceLog).length;
+        
+        for (let date in state.attendanceLog) {
+            const status = state.attendanceLog[date][studentId];
+            if (status === 'ontime') present++;
+            else if (status === 'late') late++;
+            else if (status === 'excused') excused++;
+            else if (status === 'absent') absent++;
+        }
+        
+        const percent = totalSessions === 0 ? 0 : Math.round((present / totalSessions) * 100);
+        return { present, late, excused, absent, totalSessions, percent };
+    }
+
     function renderStudentProfil(el) {
         const u = state.currentUser;
         const totalTuntas = u.completedQuests.filter(q => q.status === 'completed').length;
-        const totalHadir = u.attendanceStats.present || 0;
+        const att = getStudentAttendanceStats(u.id);
+        
+        const rapor = getStudentRaporInfo(u);
+        const predikatBg = rapor.predikat === 'A' ? 'bg-emerald-500' : (rapor.predikat === 'B' ? 'bg-blue-500' : (rapor.predikat === 'C' ? 'bg-amber-500' : 'bg-rose-500'));
         
         const reqXpOk = u.lifetimeXP >= 1000; 
         const reqSkuOk = totalTuntas === 30;
-        const reqHadirOk = totalHadir >= 10;
+        const reqHadirOk = att.present >= 10;
         const reqDisiplinOk = !hasActiveSanction(u); 
         const reqRekomendasiOk = u.isRecommended;
 
@@ -992,12 +1296,15 @@
 
         const percentXP = Math.min(100, (u.lifetimeXP / 1000) * 100);
         const percentSKU = Math.min(100, (totalTuntas / 30) * 100);
-        const percentHadir = Math.min(100, (totalHadir / 10) * 100);
+        const percentHadir = Math.min(100, (att.present / 10) * 100);
 
         let html = `
         <div class="mb-4 flex justify-between items-center">
             <h3 class="font-black text-sm text-slate-800 uppercase tracking-wider ml-1">⛺ Status Pelantikan</h3>
-            <button onclick="openPanduanModal()" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-[10px] font-black shadow-sm flex items-center gap-1.5 hover:bg-indigo-200 transition-colors"><i class="fa-solid fa-circle-info"></i> PANDUAN</button>
+            <div class="flex items-center gap-2">
+                <span class="${predikatBg} text-white px-2.5 py-1 rounded-lg text-[10px] font-black shadow-sm">PREDIKAT ${rapor.predikat}</span>
+                <button onclick="openPanduanModal()" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-[10px] font-black shadow-sm flex items-center gap-1.5 hover:bg-indigo-200 transition-colors"><i class="fa-solid fa-circle-info"></i> PANDUAN</button>
+            </div>
         </div>
         
         <div class="card-3d p-4 bg-white mb-5 border-l-4 ${isSiapDilantik ? 'border-l-green-500 bg-green-50/20' : 'border-l-amber-500'}">
@@ -1024,7 +1331,7 @@
                 <div>
                     <div class="flex justify-between items-center text-[11px] font-bold text-slate-600 mb-1">
                         <span>3. Latihan Rutin (Min 10x)</span>
-                        <span class="flex items-center gap-1">${totalHadir}/10 Latihan ${reqHadirOk ? '<i class="fa-solid fa-circle-check text-green-500"></i>' : '<i class="fa-solid fa-circle-xmark text-slate-300"></i>'}</span>
+                        <span class="flex items-center gap-1">${att.present}/10 Latihan ${reqHadirOk ? '<i class="fa-solid fa-circle-check text-green-500"></i>' : '<i class="fa-solid fa-circle-xmark text-slate-300"></i>'}</span>
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200"><div class="bg-gradient-to-r from-emerald-400 to-green-300 h-full rounded-full transition-all duration-300" style="width: ${percentHadir}%"></div></div>
                 </div>
@@ -1041,6 +1348,18 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="card-3d p-4 bg-white mb-5 border-l-4 border-l-blue-500">
+            <h3 class="font-extrabold text-sm text-slate-800 mb-3 border-b pb-2 flex justify-between items-center"><span>Statistik Kehadiran</span><span class="text-blue-600 font-black">${att.percent}%</span></h3>
+            <div class="w-full bg-slate-100 rounded-full h-3 mb-3 overflow-hidden"><div class="bg-blue-500 h-full rounded-full" style="width: ${att.percent}%"></div></div>
+            <div class="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+                <div class="bg-emerald-50 text-emerald-700 py-1.5 rounded-lg border border-emerald-200">Hadir<br><span class="text-xs font-black">${att.present}</span></div>
+                <div class="bg-blue-50 text-blue-700 py-1.5 rounded-lg border border-blue-200">Izin<br><span class="text-xs font-black">${att.excused}</span></div>
+                <div class="bg-amber-50 text-amber-700 py-1.5 rounded-lg border border-amber-200">Telat<br><span class="text-xs font-black">${att.late}</span></div>
+                <div class="bg-rose-50 text-rose-700 py-1.5 rounded-lg border border-rose-200">Alpa<br><span class="text-xs font-black">${att.absent}</span></div>
+            </div>
+            <p class="text-[9px] text-center text-slate-400 mt-2">Berdasarkan total ${att.totalSessions} pertemuan latihan.</p>
         </div>
 
         <h3 class="font-black text-sm text-slate-800 mb-3 uppercase tracking-wider ml-1">📖 Riwayat Perolehan XP</h3>
@@ -1097,28 +1416,65 @@
 
     function renderStudentRegu(el) {
         const myRegu = state.currentUser.regu; const rData = state.regus[myRegu] || { coins: 0, totalLostCoins: 0, logs: [], logo: '🛡️' };
-        const members = state.students.filter(s => s.regu === myRegu).map(s => ({
-            ...s, contributed: Math.floor(s.lifetimeXP / 10)
-        })).sort((a, b) => b.contributed - a.contributed);
+        const members = state.students.filter(s => s.regu === myRegu).map(s => {
+            const att = getStudentAttendanceStats(s.id);
+            return { ...s, contributed: Math.floor(s.lifetimeXP / 10), attPercent: att.percent };
+        }).sort((a, b) => b.contributed - a.contributed);
+
+        let totalReguPercent = 0;
+        members.forEach(m => totalReguPercent += m.attPercent);
+        const avgReguPercent = members.length === 0 ? 0 : Math.round(totalReguPercent / members.length);
 
         let html = `
         <div class="mb-5 text-center flex flex-col items-center">
             <div class="w-20 h-20 bg-white rounded-2xl shadow-md border border-slate-200 mb-2 flex items-center justify-center text-4xl overflow-hidden">${renderAvatar(rData.logo || '🛡️')}</div>
             <h3 class="title-font font-black text-2xl text-slate-800">Regu ${myRegu}</h3>
         </div>
-        <div class="grid grid-cols-2 gap-3 mb-5">
-            <div class="card-3d bg-gradient-to-br from-amber-500 to-amber-600 text-white p-3 text-center border-amber-600"><div class="text-[10px] font-black uppercase opacity-90 mb-1">Kas Regu</div><div class="text-2xl font-black drop-shadow-md flex justify-center items-center gap-1.5"><i class="fa-solid fa-coins text-yellow-300"></i> ${rData.coins}</div></div>
-            <div class="card-3d bg-gradient-to-br from-slate-700 to-slate-800 text-white p-3 text-center border-slate-700"><div class="text-[10px] font-black uppercase opacity-90 mb-1">Total Hilang</div><div class="text-2xl font-black drop-shadow-md">${rData.totalLostCoins}</div></div>
+        <div class="grid grid-cols-3 gap-2 mb-5">
+            <div class="card-3d bg-gradient-to-br from-amber-500 to-amber-600 text-white p-2 text-center border-amber-600"><div class="text-[9px] font-black uppercase opacity-90 mb-1">Kas Koin</div><div class="text-xl font-black drop-shadow-md flex justify-center items-center gap-1.5"><i class="fa-solid fa-coins text-yellow-300"></i> ${rData.coins}</div></div>
+            <div class="card-3d bg-gradient-to-br from-slate-700 to-slate-800 text-white p-2 text-center border-slate-700"><div class="text-[9px] font-black uppercase opacity-90 mb-1">Total Hilang</div><div class="text-xl font-black drop-shadow-md">${rData.totalLostCoins}</div></div>
+            <div class="card-3d bg-gradient-to-br from-blue-500 to-blue-600 text-white p-2 text-center border-blue-600"><div class="text-[9px] font-black uppercase opacity-90 mb-1">Rata² Hadir</div><div class="text-xl font-black drop-shadow-md">${avgReguPercent}%</div></div>
         </div>
-        <h3 class="font-black text-sm text-slate-800 mb-3 uppercase tracking-wider ml-1 mt-6">🏅 Pahlawan Regu (Kontributor Koin)</h3>
+        `;
+
+        const reguFinances = state.finances.filter(f => f.reguName === myRegu);
+        let totalUangKas = 0;
+        reguFinances.forEach(f => { if(f.type === 'Pemasukan') totalUangKas += f.amount; else totalUangKas -= f.amount; });
+
+        html += `
+        <div class="flex justify-between items-end mb-3 mt-6">
+            <h3 class="font-black text-sm text-slate-800 uppercase tracking-wider ml-1">💸 Buku Kas Uang</h3>
+            <span class="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-1 rounded border border-emerald-300">Saldo: Rp ${totalUangKas.toLocaleString('id-ID')}</span>
+        </div>
+        <div class="space-y-2 mb-6">`;
+        if (reguFinances.length === 0) {
+            html += `<div class="text-center text-xs font-bold text-slate-400 py-4 bg-white rounded-xl border border-dashed border-slate-300">Belum ada catatan keuangan kas uang asli.</div>`;
+        } else {
+            reguFinances.forEach(f => {
+                const isIncome = f.type === 'Pemasukan';
+                html += `
+                <div class="card-3d p-3 bg-white flex justify-between items-center border-l-4 ${isIncome ? 'border-emerald-400' : 'border-rose-400'}">
+                    <div class="flex-1 pr-2">
+                        <h5 class="font-extrabold text-[11px] text-slate-800">${f.description}</h5>
+                        <p class="text-[9px] font-bold text-slate-400">${f.date}</p>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-xs font-black ${isIncome ? 'text-emerald-600' : 'text-rose-600'}">${isIncome ? '+' : '-'} Rp ${f.amount.toLocaleString('id-ID')}</div>
+                        <div class="text-[8px] font-bold text-slate-500 uppercase">${f.type}</div>
+                    </div>
+                </div>`;
+            });
+        }
+        html += `</div>`;
+
+        html += `<h3 class="font-black text-sm text-slate-800 mb-3 uppercase tracking-wider ml-1 mt-6">🏅 Anggota Regu</h3>
         <div class="space-y-2 mb-6">`;
         members.forEach((m, idx) => {
             html += `<div class="card-3d p-3 bg-white border-slate-100 flex justify-between items-center border-l-4 ${idx === 0 ? 'border-l-yellow-400 bg-yellow-50/30' : 'border-l-slate-300'}">
-                <div class="flex items-center gap-3 min-w-0">
-                    <span class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${idx === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-500'}">#${idx+1}</span>
+                <div class="flex items-center gap-3 min-w-0 flex-1">
                     <div class="w-10 h-10 overflow-hidden rounded-full flex items-center justify-center text-2xl shrink-0 bg-slate-50 border shadow-inner">${renderAvatar(m.avatarEmoji)}</div>
                     <div class="min-w-0">
-                        <div class="font-extrabold text-xs text-slate-800 truncate">${m.name}</div>
+                        <div class="font-extrabold text-xs text-slate-800 truncate">${m.name} <span class="text-[8px] bg-blue-100 text-blue-700 px-1 py-0.5 rounded font-black border border-blue-200 ml-1">Hadir: ${m.attPercent}%</span></div>
                         <div class="text-[9px] text-slate-500 font-bold uppercase truncate">${m.jabatan}</div>
                     </div>
                 </div>
@@ -1127,14 +1483,6 @@
                     <span class="text-[8px] text-slate-400 font-bold uppercase">Koin Regu</span>
                 </div>
             </div>`;
-        });
-
-        html += `</div>
-        <h3 class="font-black text-sm text-slate-800 mb-3 uppercase tracking-wider ml-1 mt-6">📜 Buku Ledger Log</h3>
-        <div class="space-y-2.5">`;
-        if (rData.logs.length === 0) html += `<div class="text-center text-xs font-bold text-slate-400 py-4 bg-white rounded-xl border border-dashed border-slate-300">Belum ada aktivitas.</div>`;
-        else rData.logs.forEach(lg => {
-            html += `<div class="card-3d p-3 bg-white border-slate-100 flex justify-between items-center"><div><div class="text-[11px] font-extrabold text-slate-800 leading-tight">${lg.reason}</div><div class="text-[9px] font-bold text-slate-400 mt-1">Oleh: ${lg.contributor} • ${lg.date}</div></div><span class="text-[10px] font-black px-2 py-1 rounded-lg ${lg.type === 'gain' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${lg.amount} K</span></div>`;
         });
         el.innerHTML = html + `</div>`;
     }
@@ -1237,9 +1585,9 @@
         <div class="bg-indigo-900 text-white p-4 pb-10 rounded-b-[2.5rem] shadow-lg relative">
             <div class="flex justify-between items-center mb-4">
                 <button onclick="state.currentView='dashboard';renderMainView()" class="bg-indigo-800/80 px-3 py-1.5 rounded-lg border border-indigo-700 text-[10px] font-bold"><i class="fa-solid fa-arrow-left"></i> KELUAR</button>
-                <div class="text-[9px] font-black bg-indigo-800 px-2 py-1 rounded border border-indigo-600 uppercase tracking-widest">Satelit Pembina</div>
+                <button onclick="openChatContacts()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg border border-blue-400 text-[10px] font-black shadow-md flex items-center gap-1.5"><i class="fa-solid fa-comments"></i> CHAT PUSAT</button>
             </div>
-            <div class="flex items-center gap-3"><div class="w-12 h-12 bg-indigo-800 rounded-xl flex items-center justify-center text-2xl border-2 border-indigo-500 shadow-inner">👮‍♂️</div><div><h2 class="title-font font-black text-lg text-white">Panel Kontrol</h2><p class="text-[10px] font-extrabold text-indigo-300 uppercase tracking-widest">Gudep 09.011-09.012</p></div></div>
+            <div class="flex items-center gap-3"><div class="w-12 h-12 bg-indigo-800 rounded-xl flex items-center justify-center text-2xl border-2 border-indigo-500 shadow-inner">👮‍♂️</div><div><h2 class="title-font font-black text-lg text-white">Panel Kontrol</h2><p class="text-[10px] font-extrabold text-indigo-300 uppercase tracking-widest">Satelit Pembina</p></div></div>
         </div>
         <div class="px-4 -mt-5 relative z-20 overflow-x-auto no-scrollbar">
             <div class="card-3d bg-white p-1.5 flex gap-1 shadow-lg min-w-max">
@@ -1247,6 +1595,7 @@
                 <button onclick="switchAdminSection('attendance')" id="btn-adm-attendance" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">📋 Presensi CRUD</button>
                 <button onclick="switchAdminSection('students')" id="btn-adm-students" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">👥 Siswa</button>
                 <button onclick="switchAdminSection('regus')" id="btn-adm-regus" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🛡️ Regu</button>
+                <button onclick="switchAdminSection('finances')" id="btn-adm-finances" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">💸 Kas Uang</button>
                 <button onclick="switchAdminSection('missions')" id="btn-adm-missions" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🎯 Misi SKU</button>
                 <button onclick="switchAdminSection('shop')" id="btn-adm-shop" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🎁 Kedai</button>
                 <button onclick="switchAdminSection('bonus')" id="btn-adm-bonus" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🌟 Bonus</button>
@@ -1261,7 +1610,7 @@
 
     function switchAdminSection(section) {
         state.adminSection = section;
-        ['verification', 'attendance', 'students', 'regus', 'missions', 'shop', 'bonus', 'discipline', 'rapor', 'appsettings'].forEach(s => {
+        ['verification', 'attendance', 'students', 'regus', 'finances', 'missions', 'shop', 'bonus', 'discipline', 'rapor', 'appsettings'].forEach(s => {
             const el = document.getElementById(`btn-adm-${s}`);
             if(el) el.className = `px-3 py-2 text-[9px] font-black rounded-lg text-center transition-all uppercase whitespace-nowrap ${s === section ? 'bg-indigo-900 text-white' : 'text-slate-500'}`;
         });
@@ -1270,6 +1619,7 @@
         else if (section === 'attendance') renderAdminPresensi(panel);
         else if (section === 'students') renderAdminSiswa(panel);
         else if (section === 'regus') renderAdminRegu(panel);
+        else if (section === 'finances') renderAdminKeuangan(panel);
         else if (section === 'missions') renderAdminMisi(panel);
         else if (section === 'shop') renderAdminShop(panel);
         else if (section === 'bonus') renderAdminBonus(panel);
@@ -1493,8 +1843,8 @@
         let count = 0;
         state.students.forEach(s => {
             if(!state.attendanceLog[tempAttDate][s.id]) {
-                state.attendanceLog[tempAttDate][s.id] = 'ontime'; s.attendanceStats.present++;
-                s.attendanceXP = Math.min(150, s.attendanceXP + attendanceTypes['ontime'].xp);
+                state.attendanceLog[tempAttDate][s.id] = 'ontime'; 
+                s.attendanceXP = Math.min(150, (s.attendanceXP || 0) + attendanceTypes['ontime'].xp);
                 addXPRecord(s, attendanceTypes['ontime'].xp, `Presensi: ${tempAttTitle}`, false); 
                 asyncSyncStudent(s);
                 count++;
@@ -1535,31 +1885,40 @@
         }).join('');
     }
 
+    let isProcessingAtt = false;
     async function setSingleAttendance(studentId, type) {
-        if(!state.attendanceLog[tempAttDate]) state.attendanceLog[tempAttDate] = {};
+        if (isProcessingAtt) return;
+        isProcessingAtt = true;
         
-        const s = state.students.find(st => st.id === studentId); 
-        const dayLogs = state.attendanceLog[tempAttDate];
-        const prevType = dayLogs[studentId];
+        try {
+            if(!state.attendanceLog[tempAttDate]) state.attendanceLog[tempAttDate] = {};
+            
+            const s = state.students.find(st => st.id === studentId); 
+            const dayLogs = state.attendanceLog[tempAttDate];
+            const prevType = dayLogs[studentId];
 
-        if (prevType) {
-            const prevXP = attendanceTypes[prevType].xp;
-            if (prevType === 'ontime') s.attendanceStats.present = Math.max(0, s.attendanceStats.present - 1);
-            s.attendanceXP = Math.max(0, s.attendanceXP - prevXP);
-            addXPRecord(s, -prevXP, `Koreksi Presensi ${tempAttDate}`, false);
+            if (prevType === type) { showToast(`Status sudah ${attendanceTypes[type].label}`, "ℹ️"); return; }
+
+            let xpChange = 0;
+            if (prevType) xpChange -= attendanceTypes[prevType].xp;
+            xpChange += attendanceTypes[type].xp;
+
+            dayLogs[studentId] = type;
+            s.attendanceXP = Math.max(0, (s.attendanceXP || 0) + xpChange);
+            
+            addXPRecord(s, xpChange, `Update Presensi (${attendanceTypes[type].label}): ${tempAttTitle}`, false); 
+            
+            await asyncSyncStudent(s);
+            await asyncSyncAttendanceLog(tempAttDate, tempAttTitle, dayLogs);
+
+            showToast(`Presensi ${s.name} disimpan!`, "✅"); 
+            switchAdminSection('attendance');
+        } catch (err) {
+            console.error(err);
+            showToast("Terjadi kesalahan sistem", "❌");
+        } finally {
+            isProcessingAtt = false;
         }
-
-        dayLogs[studentId] = type;
-        const newXP = attendanceTypes[type].xp; 
-        s.attendanceXP = Math.min(150, s.attendanceXP + newXP);
-        if (type === 'ontime') s.attendanceStats.present++;
-        
-        addXPRecord(s, newXP, `Presensi (${attendanceTypes[type].label}): ${tempAttTitle}`, false); 
-        await asyncSyncStudent(s);
-        await asyncSyncAttendanceLog(tempAttDate, tempAttTitle, dayLogs);
-
-        showToast(`Status ${s.name} berhasil di-update!`, "desc"); 
-        switchAdminSection('attendance');
     }
 
     // ==========================================
@@ -1601,12 +1960,14 @@
             return;
         }
 
-        container.innerHTML = filtered.map(s => `
+        container.innerHTML = filtered.map(s => {
+            const att = getStudentAttendanceStats(s.id);
+            return `
             <div class="card-3d bg-white p-3 flex justify-between items-center border-l-4 border-indigo-200">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 overflow-hidden rounded-full flex items-center justify-center text-2xl shrink-0">${renderAvatar(s.avatarEmoji)}</div>
                     <div>
-                        <div class="font-extrabold text-xs text-slate-800">${s.name} <span class="text-[8px] bg-slate-200 text-slate-600 px-1 rounded">${s.kelas}</span></div>
+                        <div class="font-extrabold text-xs text-slate-800">${s.name} <span class="text-[8px] bg-slate-200 text-slate-600 px-1 rounded">${s.kelas}</span> <span class="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-black border border-blue-200">Hadir: ${att.percent}%</span></div>
                         <div class="text-[9px] text-slate-500 font-bold uppercase mt-0.5">${s.regu} • ${s.jabatan}</div>
                         <div class="flex gap-1.5 mt-1.5 items-center">
                             <span class="text-[8px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border">${s.lifetimeXP} XP</span>
@@ -1619,8 +1980,8 @@
                     <button onclick="openAdminStudentModal('${s.id}')" class="w-7 h-7 rounded bg-amber-100 text-amber-600 flex items-center justify-center"><i class="fa-solid fa-pen"></i></button>
                     <button onclick="deleteStudent('${s.id}')" class="w-7 h-7 rounded bg-rose-100 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     async function toggleRecommendation(studentId) {
@@ -2096,7 +2457,6 @@
         switchAdminSection('discipline');
     }
 
-    // CRUD ATURAN RESTITUSI
     function openAdminRestitutionModal(id = null) {
         document.getElementById('admin-rest-modal').classList.remove('hidden');
         if(id) {
@@ -2164,7 +2524,6 @@
         }
     }
 
-    // CRUD ATURAN SANKSI
     function openAdminSanctionRuleModal(id = null) {
         document.getElementById('admin-sanc-rule-modal').classList.remove('hidden');
         if(id) {
@@ -2216,6 +2575,93 @@
             if(error) return showToast("Gagal menghapus aturan sanksi!", "❌");
             state.sanctionRules = state.sanctionRules.filter(r => r.id !== id);
             showToast("Aturan dihapus.", "🗑️"); switchAdminSection('discipline');
+        });
+    }
+
+    // ==========================================
+    // 💸 ADMIN KEUANGAN (KAS UANG ASLI REGU)
+    // ==========================================
+    function renderAdminKeuangan(el) {
+        const regus = Object.keys(state.regus);
+        
+        let html = `
+        <div class="mb-4">
+            <h3 class="title-font font-black text-lg text-slate-800">Catatan Keuangan Regu</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase">Kelola Pemasukan & Pengeluaran Uang Asli</p>
+        </div>
+
+        <div class="card-3d p-4 bg-white mb-6 border-l-4 border-emerald-500">
+            <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Catat Transaksi Baru</h4>
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Regu</label>
+                        <select id="fin-regu" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2 bg-slate-50">
+                            ${regus.map(r => `<option value="${r}">${r}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Jenis Transaksi</label>
+                        <select id="fin-type" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2 bg-slate-50">
+                            <option value="Pemasukan">Pemasukan (+)</option>
+                            <option value="Pengeluaran">Pengeluaran (-)</option>
+                        </select>
+                    </div>
+                </div>
+                <div><input type="text" id="fin-desc" placeholder="Keterangan (Cth: Iuran Juli, Beli Rafia)" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-emerald-500"></div>
+                <div><input type="number" id="fin-amount" placeholder="Nominal Rp (Cth: 15000)" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-emerald-500"></div>
+                <button onclick="createFinanceRecord()" class="btn-3d btn-emerald w-full text-[10px] h-9 min-h-0 py-0"><i class="fa-solid fa-save mr-1"></i> SIMPAN TRANSAKSI</button>
+            </div>
+        </div>
+        
+        <h3 class="font-black text-sm text-slate-800 mb-3 uppercase tracking-wider ml-1">📋 Riwayat Transaksi Global</h3>
+        <div class="space-y-3">`;
+
+        if (state.finances.length === 0) {
+            html += `<div class="text-center text-xs font-bold text-slate-400 py-4 bg-white rounded-xl border border-dashed border-slate-300">Belum ada catatan keuangan.</div>`;
+        } else {
+            state.finances.forEach(f => {
+                const isIncome = f.type === 'Pemasukan';
+                html += `
+                <div class="card-3d p-3 bg-white flex justify-between items-center border-l-4 ${isIncome ? 'border-emerald-400' : 'border-rose-400'}">
+                    <div class="flex-1 pr-2">
+                        <div class="text-[11px] font-extrabold text-slate-800">${f.description}</div>
+                        <div class="text-[9px] font-bold text-slate-500">Regu ${f.reguName} • ${f.date}</div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-xs font-black ${isIncome ? 'text-emerald-600' : 'text-rose-600'}">${isIncome ? '+' : '-'} Rp ${f.amount.toLocaleString('id-ID')}</div>
+                        <button onclick="deleteFinance('${f.id}')" class="text-[9px] font-bold text-rose-500 underline mt-1"><i class="fa-solid fa-trash"></i> Hapus</button>
+                    </div>
+                </div>`;
+            });
+        }
+        el.innerHTML = html + `</div>`;
+    }
+
+    async function createFinanceRecord() {
+        const reguName = document.getElementById('fin-regu').value;
+        const type = document.getElementById('fin-type').value;
+        const description = document.getElementById('fin-desc').value.trim();
+        const amount = parseInt(document.getElementById('fin-amount').value);
+        
+        if(!description || isNaN(amount) || amount <= 0) return showToast("Keterangan & Nominal valid wajib diisi!", "⚠️");
+        
+        const dateStr = new Date().toLocaleDateString('id-ID');
+        const newRecord = { id: 'fin-' + Date.now(), regu_name: reguName, type, amount, description, date: dateStr };
+        
+        state.finances.unshift({ id: newRecord.id, reguName: newRecord.regu_name, type: newRecord.type, amount: newRecord.amount, description: newRecord.description, date: newRecord.date });
+        
+        await DatabaseService.insertFinance(newRecord);
+        showToast("Transaksi Kas Regu tersimpan!", "✅");
+        switchAdminSection('finances');
+    }
+
+    function deleteFinance(finId) {
+        openConfirmModal("Hapus Transaksi?", "Catatan keuangan ini akan dihapus permanen.", async () => {
+            state.finances = state.finances.filter(f => f.id !== finId);
+            await DatabaseService.deleteFinance(finId);
+            showToast("Transaksi dihapus.", "🗑️");
+            switchAdminSection('finances');
         });
     }
 
@@ -2348,7 +2794,22 @@
                     <input type="text" id="cfg-app-logo" value="${currentAppConfig.appLogo}" placeholder="⚜️" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2.5 focus:border-indigo-500">
                 </div>
                 
-                <button onclick="saveAppSettingsForm()" class="btn-3d btn-primary w-full text-[10px] h-10 min-h-0">SIMPAN IDENTITAS</button>
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <label class="block text-xs font-extrabold text-slate-800 mb-2">Avatar / Foto Profil Pembina</label>
+                    <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div id="cfg-admin-avatar-preview" class="w-16 h-16 bg-white rounded-xl border-2 border-indigo-200 flex items-center justify-center overflow-hidden text-3xl shrink-0 shadow-inner">${renderAvatar(currentAppConfig.adminAvatar || '👮‍♂️')}</div>
+                        <div class="flex-1">
+                            <input type="file" id="cfg-admin-photo" accept="image/*" onchange="handleAdminAvatarUpload(this)" class="w-full text-[9px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-indigo-100 file:text-indigo-700 cursor-pointer mb-2">
+                            <div class="flex gap-2">
+                                <input type="text" id="cfg-admin-emoji" placeholder="Atau Emoji (Cth: 👨‍✈️)" class="flex-1 text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500">
+                                <button onclick="resetAdminAvatar()" class="btn-3d btn-rose px-3 py-1 text-[10px] h-10 min-h-0" title="Reset"><i class="fa-solid fa-rotate-left"></i></button>
+                            </div>
+                            <input type="hidden" id="cfg-admin-avatar-data" value="${currentAppConfig.adminAvatar || '👮‍♂️'}">
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="saveAppSettingsForm()" class="btn-3d btn-primary w-full text-[10px] h-10 min-h-0 mt-2">SIMPAN IDENTITAS</button>
             </div>
         </div>
         
@@ -2370,11 +2831,16 @@
     }
 
     async function saveAppSettingsForm() {
+        const emojiAdmin = document.getElementById('cfg-admin-emoji')?.value.trim();
+        let adminAvatar = document.getElementById('cfg-admin-avatar-data')?.value || '👮‍♂️';
+        if (emojiAdmin) adminAvatar = emojiAdmin;
+
         const newConfig = {
             appTitle: document.getElementById('cfg-app-title').value.trim() || defaultAppConfig.appTitle,
             appVersion: document.getElementById('cfg-app-version').value.trim() || defaultAppConfig.appVersion,
             schoolName: document.getElementById('cfg-school-name').value.trim() || defaultAppConfig.schoolName,
-            appLogo: document.getElementById('cfg-app-logo').value.trim() || defaultAppConfig.appLogo
+            appLogo: document.getElementById('cfg-app-logo').value.trim() || defaultAppConfig.appLogo,
+            adminAvatar: adminAvatar
         };
         await saveAppIdentityToCloud(newConfig);
         showToast("Identitas Aplikasi berhasil di-update!", "✅");
@@ -2400,14 +2866,6 @@
         // Memuat ulang halaman agar client Supabase baru ter-inisialisasi
         setTimeout(() => { window.location.reload(); }, 1500);
     }
-
-    // Struktur Absen Constant
-    const attendanceTypes = { 
-        'ontime': { label: 'Hadir', xp: 8, color: 'bg-emerald-500' }, 
-        'late': { label: 'Telat', xp: 4, color: 'bg-amber-500' }, 
-        'excused': { label: 'Izin', xp: 2, color: 'bg-blue-500' }, 
-        'absent': { label: 'Alpa', xp: 0, color: 'bg-rose-500' } 
-    };
 </script>
 </body>
 </html>
