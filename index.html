@@ -1,4 +1,893 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title id="html-title">PRAPATRA Quest - Pramuka SDN 4 Rambutan</title><script src="https://cdn.tailwindcss.com"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&amp;family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>body{font-family:Nunito,sans-serif;-webkit-tap-highlight-color:transparent;background-color:#f1f5f9}.title-font{font-family:Fredoka,sans-serif}.app-container{max-width:480px;margin:0 auto;background-color:#fafafa;min-height:100vh;position:relative;display:flex;flex-direction:column;overflow-x:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,.15)}.btn-3d{display:flex;align-items:center;justify-content:center;min-height:48px;padding:.5rem 1.25rem;border-radius:1rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;transition:all .1s ease;cursor:pointer;user-select:none;border:2px solid rgba(0,0,0,.1)}.btn-primary{background-color:#4f46e5;color:#fff;box-shadow:0 6px 0 #3730a3}.btn-primary:active{transform:translateY(4px);box-shadow:0 2px 0 #3730a3}.btn-amber{background-color:#f59e0b;color:#fff;box-shadow:0 6px 0 #b45309}.btn-amber:active{transform:translateY(4px);box-shadow:0 2px 0 #b45309}.btn-emerald{background-color:#10b981;color:#fff;box-shadow:0 6px 0 #047857}.btn-emerald:active{transform:translateY(4px);box-shadow:0 2px 0 #047857}.btn-rose{background-color:#e11d48;color:#fff;box-shadow:0 6px 0 #9f1239}.btn-rose:active{transform:translateY(4px);box-shadow:0 2px 0 #9f1239}.btn-indigo{background-color:#6366f1;color:#fff;box-shadow:0 6px 0 #4338ca}.btn-indigo:active{transform:translateY(4px);box-shadow:0 2px 0 #4338ca}.btn-disabled{background-color:#cbd5e1;color:#94a3b8;box-shadow:0 4px 0 #94a3b8;cursor:not-allowed;pointer-events:none}.card-3d{background:#fff;border-radius:1.25rem;border:2px solid #e2e8f0;box-shadow:0 6px 0 #e2e8f0;transition:all 150ms ease}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none}#loading-overlay{backdrop-filter:blur(4px)}</style></head><body><div class="app-container"><div id="top-navbar" class="bg-amber-800 text-white px-4 py-3 flex justify-between items-center z-30 shadow-md"><div class="flex items-center gap-2"><span class="text-xl" id="nav-logo">⚜️</span><span class="font-extrabold tracking-wider text-sm title-font text-amber-100 uppercase" id="nav-title">PRAPATRA QUEST</span></div><div class="text-[9px] font-bold text-amber-300 uppercase tracking-widest border border-amber-600/40 px-2 py-0.5 rounded bg-amber-900/40" id="nav-school">SDN 4 Rambutan</div></div><div id="sanction-banner" class="hidden bg-rose-600 text-white px-4 py-2 text-center text-[11px] font-black tracking-wide flex items-center justify-center gap-2 z-25 relative shadow-md"><i class="fa-solid fa-triangle-exclamation animate-bounce"></i><span id="sanction-banner-text">SANKSI AKTIF! BEBERAPA FITUR TERKUNCI.</span></div><main id="main-scene" class="flex-1 overflow-y-auto no-scrollbar relative pb-20"></main><div id="custom-toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[150] transform translate-y-[-150%] transition-transform duration-300 ease-out max-w-sm w-[90%] pointer-events-none"><div class="card-3d bg-slate-900 text-white p-4 flex items-center gap-3 border-slate-700 shadow-xl"><div id="toast-icon" class="text-2xl">💡</div><div id="toast-message" class="text-sm font-bold leading-tight">Pesan sistem...</div></div></div><div id="confirm-modal" class="fixed inset-0 z-[120] bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-xs p-6 relative text-center"><div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-3xl text-rose-600"></i></div><h3 class="title-font font-black text-lg text-slate-800 mb-2" id="confirm-title">Konfirmasi</h3><p class="text-xs font-bold text-slate-500 mb-6" id="confirm-desc">Apakah Anda yakin?</p><div class="grid grid-cols-2 gap-2"><button onclick="closeConfirmModal()" class="btn-3d bg-slate-200 text-slate-600 text-[10px] h-10 min-h-0 shadow-none">BATAL</button><button id="btn-confirm-yes" class="btn-3d btn-rose text-[10px] h-10 min-h-0">YAKIN</button></div></div></div><div id="loading-overlay" class="fixed inset-0 z-[100] bg-amber-900/60 flex flex-col items-center justify-center transition-opacity duration-300"><i class="fa-solid fa-compass fa-spin text-5xl text-amber-400 mb-4 drop-shadow-lg"></i><h2 class="title-font font-black text-xl text-white tracking-widest drop-shadow-md">MEMUAT DATA...</h2><p class="text-[10px] text-amber-200 font-bold uppercase mt-2" id="loading-text">Menghubungkan ke Pusat Komando</p></div><div id="student-chat-fab" class="fixed bottom-24 right-4 z-[100] hidden"><button onclick="openChatContacts()" class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(79,70,229,0.5)] border-2 border-indigo-400 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all"><i class="fa-solid fa-comments text-2xl"></i><span id="student-unread-badge" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white hidden">0</span></button></div><div id="chat-modal" class="fixed inset-0 z-[130] bg-black/60 hidden flex flex-col justify-end sm:justify-center sm:p-4 transition-all"><div class="bg-white w-full sm:max-w-md sm:mx-auto sm:rounded-2xl rounded-t-2xl h-[85vh] sm:h-[600px] flex flex-col relative shadow-2xl overflow-hidden"><div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md z-10 shrink-0"><div class="flex items-center gap-3"><button id="chat-back-btn" onclick="openChatContacts()" class="hidden w-8 h-8 flex items-center justify-center bg-indigo-700 rounded-full hover:bg-indigo-800"><i class="fa-solid fa-arrow-left"></i></button><div id="chat-modal-avatar" class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-xl border border-indigo-400 overflow-hidden">💬</div><div><h3 class="font-black text-sm" id="chat-modal-name">Hubungi Seseorang</h3><p class="text-[10px] text-indigo-200 font-bold uppercase" id="chat-modal-role">Daftar Kontak</p></div></div><button onclick="closeChatModal()" class="w-8 h-8 flex items-center justify-center bg-indigo-700 rounded-full hover:bg-indigo-800"><i class="fa-solid fa-xmark"></i></button></div><div id="chat-contacts-panel" class="flex-1 overflow-y-auto bg-slate-50 p-4 space-y-2 block"></div><div id="chat-room-panel" class="flex-1 flex flex-col hidden bg-slate-50 relative"><div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col"></div><div class="p-3 bg-white border-t border-slate-200 flex items-center gap-2 pb-5 sm:pb-3 shrink-0"><input type="text" id="chat-input-text" placeholder="Ketik pesan di sini..." onkeypress='"Enter"===event.key&&sendChatMessage()' class="flex-1 bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500"><button onclick="sendChatMessage()" class="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-indigo-700 active:scale-95 transition-all shrink-0"><i class="fa-solid fa-paper-plane"></i></button></div></div></div></div><div id="panduan-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[85vh] flex flex-col"><button onclick="closePanduanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-xl text-slate-800 text-center mb-4">📖 Panduan &amp; Sistem Level</h3><div class="overflow-y-auto no-scrollbar flex-1 space-y-4 pr-1"><div class="bg-amber-50 border border-amber-200 p-3 rounded-xl"><h4 class="font-extrabold text-amber-800 text-xs mb-2 uppercase flex items-center gap-1.5"><i class="fa-solid fa-chart-line text-amber-500"></i>Sistem Level (Progresif Klasik)</h4><p class="text-[10px] text-slate-600 mb-2 font-semibold">Tingkatan level didasarkan pada akumulasi Lifetime XP yang didapatkan:</p><ul class="list-none text-[10px] text-slate-700 space-y-1 font-bold"><li class="flex justify-between border-b border-amber-100 pb-0.5"><span>🎒 Level 1: Calon Penggalang</span><span class="text-amber-700">0 - 199 XP</span></li><li class="flex justify-between border-b border-amber-100 pb-0.5"><span>🛡️ Level 2: Ramu Purwa</span><span class="text-amber-700">200 - 399 XP</span></li><li class="flex justify-between border-b border-amber-100 pb-0.5"><span>🏕️ Level 3: Ramu Madya</span><span class="text-amber-700">400 - 599 XP</span></li><li class="flex justify-between border-b border-amber-100 pb-0.5"><span>🧭 Level 4: Ramu Utama</span><span class="text-amber-700">600 - 799 XP</span></li><li class="flex justify-between border-b border-amber-100 pb-0.5"><span>🔥 Level 5: Ramu Pratama</span><span class="text-amber-700">800 - 999 XP</span></li><li class="flex justify-between text-indigo-700"><span>⚜️ Level 6: Penggalang Ramu</span><span class="font-black">1000+ XP</span></li></ul></div><div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl"><h4 class="font-extrabold text-indigo-800 text-xs mb-2 uppercase flex items-center gap-1.5"><i class="fa-solid fa-scroll text-indigo-500"></i>Aturan XP &amp; Koin</h4><ul class="list-disc pl-4 text-[11px] text-slate-700 space-y-1 font-medium"><li>Selesaikan<strong>Misi SKU</strong>atau presensi untuk mendapatkan<strong>XP Individu</strong>.</li><li><strong>XP Sisa</strong>digunakan untuk menukar hadiah pribadi di Kedai (XP ditukar tidak akan menurunkan total Level!).</li><li>Setiap kamu mengumpulkan<strong>10 XP</strong>, regumu otomatis mendapat<strong>1 Koin Regu</strong>secara instan untuk kas belanja regu.</li></ul></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl"><h4 class="font-extrabold text-rose-800 text-xs mb-2 uppercase flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-rose-500"></i>Disiplin &amp; Jenis Sanksi</h4><p class="text-[10px] text-slate-600 mb-2 font-semibold">Tindakan disiplin dibagi menjadi 3 kategori:</p><ul class="list-none text-[10px] text-slate-700 space-y-2 font-bold"><li class="border-l-2 border-l-rose-400 pl-2"><span class="text-rose-700 block">🚨 Sanksi Pribadi</span><span class="font-normal text-slate-600 block text-[9px]">Denda hanya berlaku pada pengurangan XP individu pelanggar.</span></li><li class="border-l-2 border-l-rose-400 pl-2"><span class="text-rose-700 block">🚨 Sanksi Berdampak</span><span class="font-normal text-slate-600 block text-[9px]">Pengurangan XP siswa &amp; pemotongan koin kas Regunya, serta memblokir menu belanja/misi regu tersebut.</span></li><li class="border-l-2 border-l-rose-400 pl-2"><span class="text-rose-700 block">🚨 Sanksi Kolektif</span><span class="font-normal text-slate-600 block text-[9px]">Dikenakan langsung kepada seluruh anggota regu akibat kelalaian bersama (fitur belanja &amp; misi terkunci).</span></li></ul></div></div><button onclick="closePanduanModal()" class="btn-3d btn-primary w-full mt-4">SAYA MENGERTI</button></div></div><div id="admin-login-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative"><button onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button><div class="text-center mb-6"><div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-user-shield text-3xl text-indigo-600"></i></div><h3 class="title-font font-bold text-xl text-slate-800">Satelit Pembina</h3><p class="text-[11px] font-semibold text-slate-500">Akses: Rahasia</p></div><div class="mb-4"><input type="password" id="admin-pass-input" placeholder="••••" class="w-full text-center text-2xl tracking-widest font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"></div><button onclick="verifyAdminLogin()" class="btn-3d btn-primary w-full"><i class="fa-solid fa-unlock mr-2"></i>Akses Admin</button></div></div><div id="avatar-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[90vh] flex flex-col"><button onclick="closeAvatarModal()" class="absolute top-4 right-4 text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4 shrink-0">Ajukan Perubahan Avatar / Foto Profil</h3><div class="overflow-y-auto no-scrollbar space-y-4 pr-1"><div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl flex items-center gap-3"><div id="student-avatar-upload-preview" class="w-14 h-14 bg-white rounded-full border-2 border-indigo-200 flex items-center justify-center overflow-hidden text-xl shrink-0 shadow-inner">👤</div><div class="flex-1"><label class="block text-[10px] font-bold text-slate-600 mb-1">Unggah Foto Aslimu</label><input type="file" id="student-photo-input" accept="image/*" class="w-full text-[9px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-indigo-100 file:text-indigo-700"></div></div><div class="text-xs font-bold text-slate-400 text-center uppercase tracking-wider py-1 border-b">Atau Pilih Emoji Default</div><div class="grid grid-cols-4 gap-3" id="avatar-grid"></div></div><p class="text-[9px] text-center font-bold text-amber-600 mt-4 shrink-0 bg-amber-50 p-2 rounded-lg"><i class="fa-solid fa-circle-info mr-1"></i>Perubahan membutuhkan persetujuan Pembina sebelum tampil di profil Anda.</p></div></div><div id="reward-purchase-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative"><button onclick="closeRewardModal()" class="absolute top-4 right-4 text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-2" id="reward-modal-title">Konfirmasi Reward</h3><p class="text-xs text-slate-500 text-center mb-4" id="reward-modal-desc"></p><div id="reward-pinru-requirement" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 text-xs font-bold text-amber-900"><i class="fa-solid fa-triangle-exclamation mr-1 text-amber-600"></i>Hanya Pinru/Wapinru yang dapat membelanjakan Koin Regu.</div><div class="space-y-3 mb-4"><label class="block text-xs font-bold text-slate-600 uppercase">Catatan Tambahan / Alasan Klaim</label><textarea id="reward-claim-note" placeholder="Tulis alasan atau persetujuan musyawarah..." class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-3 focus:outline-none focus:border-amber-500 h-20"></textarea></div><button id="btn-confirm-reward-action" class="btn-3d btn-amber w-full">KIRIM AJUAN KLAIM</button></div></div><div id="admin-student-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[90vh] flex flex-col"><button onclick="closeAdminStudentModal()" class="absolute top-4 right-4 text-slate-400 z-10"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4 shrink-0" id="student-modal-title">Tambah Siswa</h3><div class="overflow-y-auto no-scrollbar space-y-3 mb-4 pr-1"><input type="hidden" id="form-student-id"> <input type="hidden" id="form-student-avatar-data"><div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200"><div id="form-student-photo-preview" class="w-16 h-16 rounded-full bg-white border-2 border-indigo-200 flex items-center justify-center overflow-hidden text-2xl shrink-0 shadow-inner">👤</div><div class="flex-1"><label class="block text-xs font-bold text-slate-600 mb-1">Upload Foto Profil</label><input type="file" id="form-student-photo" accept="image/*" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"></div></div><div><label class="block text-xs font-bold text-slate-600">Nama Lengkap</label><input type="text" id="form-student-name" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"></div><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600">Kelas</label><input type="text" id="form-student-kelas" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"></div><div><label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label><select id="form-student-gender" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"><option value="Putra">Putra</option><option value="Putri">Putri</option></select></div></div><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600">Regu</label><input type="text" id="form-student-regu" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"></div><div><label class="block text-xs font-bold text-slate-600">Jabatan</label><select id="form-student-jabatan" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"><option value="Anggota">Anggota</option><option value="Wapinru">Wapinru</option><option value="Pinru">Pinru</option><option value="Pratama">Pratama</option></select></div></div></div><button onclick="saveStudentData()" class="btn-3d btn-primary w-full shrink-0" id="btn-save-student">SIMPAN DATA</button></div></div><div id="admin-mission-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative"><button onclick="closeAdminMissionModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="mission-modal-title">Tambah Misi / SKU</h3><div class="space-y-3 mb-4"><input type="hidden" id="form-mission-id"><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600">Poin/Kode</label><input type="text" id="form-mission-poin" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"></div><div><label class="block text-xs font-bold text-slate-600">Reward XP</label><input type="number" id="form-mission-xp" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"></div></div><div><label class="block text-xs font-bold text-slate-600">Judul Misi</label><input type="text" id="form-mission-title" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"></div><div><label class="block text-xs font-bold text-slate-600">Deskripsi/Syarat</label><textarea id="form-mission-desc" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500 h-16"></textarea></div><div><label class="block text-xs font-bold text-slate-600">Tingkat Kesulitan</label><select id="form-mission-diff" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"><option value="Mudah">Mudah</option><option value="Sedang">Sedang</option><option value="Sulit">Sulit</option></select></div></div><button onclick="saveMissionData()" class="btn-3d btn-primary w-full bg-indigo-600 text-white">SIMPAN MISI</button></div></div><div id="admin-shop-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative"><button onclick="closeAdminShopModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="shop-modal-title">Tambah Hadiah Kedai</h3><div class="space-y-3 mb-4"><input type="hidden" id="form-shop-id"><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600">Kategori</label><select id="form-shop-type" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"><option value="Individu">Individu</option><option value="Regu">Regu</option></select></div><div><label class="block text-xs font-bold text-slate-600">Ikon Emoji</label><input type="text" id="form-shop-icon" placeholder="🎁" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div></div><div><label class="block text-xs font-bold text-slate-600">Nama Barang</label><input type="text" id="form-shop-name" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div><div><label class="block text-xs font-bold text-slate-600">Deskripsi</label><input type="text" id="form-shop-desc" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600">Harga Poin/Koin</label><input type="number" id="form-shop-cost" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div><div><label class="block text-xs font-bold text-slate-600">Syarat Min XP Level</label><input type="number" id="form-shop-xp" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div></div></div><button onclick="saveShopItemData()" class="btn-3d btn-amber w-full">SIMPAN HADIAH</button></div></div><div id="admin-sanc-rule-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative"><button onclick="closeAdminSanctionRuleModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="sanc-rule-modal-title">Tambah Aturan Sanksi</h3><div class="space-y-3 mb-4"><input type="hidden" id="form-sanc-rule-id"><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600">Kategori</label><select id="form-sanc-rule-type" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"><option value="Pribadi">Pribadi</option><option value="Berdampak">Berdampak</option><option value="Kolektif">Kolektif</option></select></div><div><label class="block text-xs font-bold text-slate-600">Aturan Sanksi</label><input type="text" id="form-sanc-rule-label" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2" placeholder="Cth: Atribut tidak lengkap"></div></div><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600">Denda XP (Siswa)</label><input type="number" id="form-sanc-rule-xp" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div><div><label class="block text-xs font-bold text-slate-600">Denda Koin (Regu)</label><input type="number" id="form-sanc-rule-coin" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div></div></div><button onclick="saveSanctionRuleData()" class="btn-3d btn-rose w-full">SIMPAN ATURAN</button></div></div><div id="admin-regu-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[90vh] flex flex-col"><button onclick="closeAdminReguModal()" class="absolute top-4 right-4 text-slate-400 z-10"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4 shrink-0">Edit Regu<span id="regu-modal-name-title" class="text-amber-600"></span></h3><input type="hidden" id="form-regu-name-id"> <input type="hidden" id="form-regu-logo-data"><div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4"><div id="form-regu-logo-preview" class="w-16 h-16 rounded-xl bg-white border-2 border-amber-200 flex items-center justify-center overflow-hidden text-3xl shrink-0 shadow-inner">🛡️</div><div class="flex-1"><label class="block text-xs font-bold text-slate-600 mb-1">Upload Logo Regu</label><input type="file" id="form-regu-logo" accept="image/*" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200 cursor-pointer"></div></div><div class="mb-4"><label class="block text-xs font-bold text-slate-600 mb-1">Atau Emoji (jika tidak upload)</label><input type="text" id="form-regu-emoji" placeholder="Contoh: 🦅" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-amber-500 text-center text-lg"></div><button onclick="saveReguData()" class="btn-3d btn-amber w-full shrink-0">SIMPAN LOGO</button></div></div><div id="admin-rest-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"><div class="card-3d bg-white w-full max-w-md p-6 relative"><button onclick="closeAdminRestitutionModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button><h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="rest-modal-title">Tambah Restitusi</h3><div class="space-y-3 mb-4"><input type="hidden" id="form-rest-id"><div><label class="block text-xs font-bold text-slate-600">Nama Aksi Restitusi</label><input type="text" id="form-rest-label" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2" placeholder="Cth: Kerja Bakti"></div><div><label class="block text-xs font-bold text-slate-600">Reward Pemulihan (Koin)</label><input type="number" id="form-rest-coin" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"></div></div><button onclick="saveRestitutionData()" class="btn-3d btn-emerald w-full">SIMPAN RESTITUSI</button></div></div></div><script>// ==========================================
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title id="html-title">PRAPATRA Quest - Pramuka SDN 4 Rambutan</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&amp;family=Nunito:wght@400;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+      body {
+        font-family: "Nunito", sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        background-color: #f1f5f9;
+      }
+      .title-font {
+        font-family: "Fredoka", sans-serif;
+      }
+
+      .app-container {
+        max-width: 480px;
+        margin: 0 auto;
+        background-color: #fafafa;
+        min-height: 100vh;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      }
+
+      .btn-3d {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0.5rem 1.25rem;
+        border-radius: 1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        transition: all 100ms ease;
+        cursor: pointer;
+        user-select: none;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+      }
+      .btn-primary {
+        background-color: #4f46e5;
+        color: white;
+        box-shadow: 0 6px 0 #3730a3;
+      }
+      .btn-primary:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #3730a3;
+      }
+      .btn-amber {
+        background-color: #f59e0b;
+        color: white;
+        box-shadow: 0 6px 0 #b45309;
+      }
+      .btn-amber:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #b45309;
+      }
+      .btn-emerald {
+        background-color: #10b981;
+        color: white;
+        box-shadow: 0 6px 0 #047857;
+      }
+      .btn-emerald:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #047857;
+      }
+      .btn-rose {
+        background-color: #e11d48;
+        color: white;
+        box-shadow: 0 6px 0 #9f1239;
+      }
+      .btn-rose:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #9f1239;
+      }
+      .btn-indigo {
+        background-color: #6366f1;
+        color: white;
+        box-shadow: 0 6px 0 #4338ca;
+      }
+      .btn-indigo:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #4338ca;
+      }
+      .btn-disabled {
+        background-color: #cbd5e1;
+        color: #94a3b8;
+        box-shadow: 0 4px 0 #94a3b8;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .card-3d {
+        background: white;
+        border-radius: 1.25rem;
+        border: 2px solid #e2e8f0;
+        box-shadow: 0 6px 0 #e2e8f0;
+        transition: all 150ms ease;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+      }
+      /* ===============================
+   CHAT MOBILE FIX
+================================*/
+
+      #chat-modal {
+        overscroll-behavior: none;
+      }
+
+      #chat-room-panel {
+        min-height: 0;
+      }
+
+      #chat-messages-container {
+        -webkit-overflow-scrolling: touch;
+
+        overscroll-behavior: contain;
+
+        scroll-behavior: smooth;
+      }
+
+      #chat-input-text {
+        font-size: 16px;
+      }
+
+      #chat-input-wrapper {
+        background: #fff;
+      }
+      #loading-overlay {
+        backdrop-filter: blur(4px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <div id="top-navbar" class="bg-amber-800 text-white px-4 py-3 flex justify-between items-center z-30 shadow-md">
+        <div class="flex items-center gap-2">
+          <span class="text-xl" id="nav-logo">⚜️</span>
+          <span class="font-extrabold tracking-wider text-sm title-font text-amber-100 uppercase" id="nav-title">
+            PRAPATRA QUEST
+          </span>
+        </div>
+        <div
+          class="text-[9px] font-bold text-amber-300 uppercase tracking-widest border border-amber-600/40 px-2 py-0.5 rounded bg-amber-900/40"
+          id="nav-school"
+        >
+          SDN 4 Rambutan
+        </div>
+      </div>
+
+      <!-- Banner Notifikasi Sanksi Spesifik -->
+      <div
+        id="sanction-banner"
+        class="hidden bg-rose-600 text-white px-4 py-2 text-center text-[11px] font-black tracking-wide flex items-center justify-center gap-2 z-25 relative shadow-md"
+      >
+        <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+        <span id="sanction-banner-text">SANKSI AKTIF! BEBERAPA FITUR TERKUNCI.</span>
+      </div>
+
+      <main id="main-scene" class="flex-1 overflow-y-auto no-scrollbar relative pb-20"></main>
+
+      <!-- Global Toast -->
+      <div
+        id="custom-toast"
+        class="fixed top-4 left-1/2 -translate-x-1/2 z-[150] transform translate-y-[-150%] transition-transform duration-300 ease-out max-w-sm w-[90%] pointer-events-none"
+      >
+        <div class="card-3d bg-slate-900 text-white p-4 flex items-center gap-3 border-slate-700 shadow-xl">
+          <div id="toast-icon" class="text-2xl">💡</div>
+          <div id="toast-message" class="text-sm font-bold leading-tight">Pesan sistem...</div>
+        </div>
+      </div>
+
+      <!-- Dialog Konfirmasi Kustom -->
+      <div id="confirm-modal" class="fixed inset-0 z-[120] bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-xs p-6 relative text-center">
+          <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-600"></i>
+          </div>
+          <h3 class="title-font font-black text-lg text-slate-800 mb-2" id="confirm-title">Konfirmasi</h3>
+          <p class="text-xs font-bold text-slate-500 mb-6" id="confirm-desc">Apakah Anda yakin?</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              onclick="closeConfirmModal()"
+              class="btn-3d bg-slate-200 text-slate-600 text-[10px] h-10 min-h-0 shadow-none"
+            >
+              BATAL
+            </button>
+            <button id="btn-confirm-yes" class="btn-3d btn-rose text-[10px] h-10 min-h-0">YAKIN</button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="loading-overlay"
+        class="fixed inset-0 z-[100] bg-amber-900/60 flex flex-col items-center justify-center transition-opacity duration-300"
+      >
+        <i class="fa-solid fa-compass fa-spin text-5xl text-amber-400 mb-4 drop-shadow-lg"></i>
+        <h2 class="title-font font-black text-xl text-white tracking-widest drop-shadow-md">MEMUAT DATA...</h2>
+        <p class="text-[10px] text-amber-200 font-bold uppercase mt-2" id="loading-text">
+          Menghubungkan ke Pusat Komando
+        </p>
+      </div>
+
+      <!-- FAB Chat untuk Siswa -->
+      <div id="student-chat-fab" class="fixed bottom-24 right-4 z-[100] hidden">
+        <button
+          onclick="openChatContacts()"
+          class="w-14 h-14 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-[0_10px_25px_-5px_rgba(79,70,229,0.5)] border-2 border-indigo-400 hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all"
+        >
+          <i class="fa-solid fa-comments text-2xl"></i>
+          <span
+            id="student-unread-badge"
+            class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white hidden"
+          >
+            0
+          </span>
+        </button>
+      </div>
+
+      <!-- Chat Contacts / Room Modal UI -->
+      <div
+        id="chat-modal"
+        class="fixed inset-0 z-[130] bg-black/60 hidden flex flex-col justify-end sm:justify-center sm:p-4 transition-all"
+      >
+        <div
+          class="bg-white w-full sm:max-w-md sm:mx-auto sm:rounded-2xl rounded-t-2xl h-[85vh] sm:h-[600px] flex flex-col relative shadow-2xl overflow-hidden"
+        >
+          <!-- Header Mode Kontak vs Room -->
+          <div class="bg-indigo-600 text-white p-4 flex justify-between items-center shadow-md z-10 shrink-0">
+            <div class="flex items-center gap-3">
+              <button
+                id="chat-back-btn"
+                onclick="openChatContacts()"
+                class="hidden w-8 h-8 flex items-center justify-center bg-indigo-700 rounded-full hover:bg-indigo-800"
+              >
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <div
+                id="chat-modal-avatar"
+                class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-xl border border-indigo-400 overflow-hidden"
+              >
+                💬
+              </div>
+              <div>
+                <h3 class="font-black text-sm" id="chat-modal-name">Hubungi Seseorang</h3>
+                <p class="text-[10px] text-indigo-200 font-bold uppercase" id="chat-modal-role">Daftar Kontak</p>
+              </div>
+            </div>
+            <button
+              onclick="closeChatModal()"
+              class="w-8 h-8 flex items-center justify-center bg-indigo-700 rounded-full hover:bg-indigo-800"
+            >
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Panel: Daftar Kontak -->
+          <div id="chat-contacts-panel" class="flex-1 overflow-y-auto bg-slate-50 p-4 space-y-2 block">
+            <!-- Diisi oleh JS -->
+          </div>
+
+          <!-- Panel: Ruang Obrolan -->
+          <div id="chat-room-panel" class="flex-1 flex flex-col hidden bg-slate-50 relative overflow-hidden min-h-0">
+            <div
+              id="chat-messages-container"
+              class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col min-h-0 overscroll-contain scroll-smooth"
+            >
+              <!-- Chat Messages rendered here -->
+            </div>
+            <div
+              id="chat-input-wrapper"
+              class="p-3 bg-white border-t border-slate-200 flex items-center gap-2 pb-[max(env(safe-area-inset-bottom),12px)] shrink-0 transition-all duration-300"
+            >
+              <input
+                type="text"
+                id="chat-input-text"
+                placeholder="Ketik pesan di sini..."
+                onkeypress="if (event.key === 'Enter') sendChatMessage();"
+                class="flex-1 bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-indigo-500"
+              />
+              <button
+                onclick="sendChatMessage()"
+                class="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-indigo-700 active:scale-95 transition-all shrink-0"
+              >
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panduan Modal -->
+      <div id="panduan-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[85vh] flex flex-col">
+          <button onclick="closePanduanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-xl text-slate-800 text-center mb-4">📖 Panduan &amp; Sistem Level</h3>
+          <div class="overflow-y-auto no-scrollbar flex-1 space-y-4 pr-1">
+            <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl">
+              <h4 class="font-extrabold text-amber-800 text-xs mb-2 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-chart-line text-amber-500"></i>
+                Sistem Level (Progresif Klasik)
+              </h4>
+              <p class="text-[10px] text-slate-600 mb-2 font-semibold">
+                Tingkatan level didasarkan pada akumulasi Lifetime XP yang didapatkan:
+              </p>
+              <ul class="list-none text-[10px] text-slate-700 space-y-1 font-bold">
+                <li class="flex justify-between border-b border-amber-100 pb-0.5">
+                  <span>🎒 Level 1: Calon Penggalang</span>
+                  <span class="text-amber-700">0 - 199 XP</span>
+                </li>
+                <li class="flex justify-between border-b border-amber-100 pb-0.5">
+                  <span>🛡️ Level 2: Ramu Purwa</span>
+                  <span class="text-amber-700">200 - 399 XP</span>
+                </li>
+                <li class="flex justify-between border-b border-amber-100 pb-0.5">
+                  <span>🏕️ Level 3: Ramu Madya</span>
+                  <span class="text-amber-700">400 - 599 XP</span>
+                </li>
+                <li class="flex justify-between border-b border-amber-100 pb-0.5">
+                  <span>🧭 Level 4: Ramu Utama</span>
+                  <span class="text-amber-700">600 - 799 XP</span>
+                </li>
+                <li class="flex justify-between border-b border-amber-100 pb-0.5">
+                  <span>🔥 Level 5: Ramu Pratama</span>
+                  <span class="text-amber-700">800 - 999 XP</span>
+                </li>
+                <li class="flex justify-between text-indigo-700">
+                  <span>⚜️ Level 6: Penggalang Ramu</span>
+                  <span class="font-black">1000+ XP</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl">
+              <h4 class="font-extrabold text-indigo-800 text-xs mb-2 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-scroll text-indigo-500"></i>
+                Aturan XP &amp; Koin
+              </h4>
+              <ul class="list-disc pl-4 text-[11px] text-slate-700 space-y-1 font-medium">
+                <li>
+                  Selesaikan
+                  <strong>Misi SKU</strong>
+                  atau presensi untuk mendapatkan
+                  <strong>XP Individu</strong>
+                  .
+                </li>
+                <li>
+                  <strong>XP Sisa</strong>
+                  digunakan untuk menukar hadiah pribadi di Kedai (XP ditukar tidak akan menurunkan total Level!).
+                </li>
+                <li>
+                  Setiap kamu mengumpulkan
+                  <strong>10 XP</strong>
+                  , regumu otomatis mendapat
+                  <strong>1 Koin Regu</strong>
+                  secara instan untuk kas belanja regu.
+                </li>
+              </ul>
+            </div>
+
+            <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl">
+              <h4 class="font-extrabold text-rose-800 text-xs mb-2 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                Disiplin &amp; Jenis Sanksi
+              </h4>
+              <p class="text-[10px] text-slate-600 mb-2 font-semibold">Tindakan disiplin dibagi menjadi 3 kategori:</p>
+              <ul class="list-none text-[10px] text-slate-700 space-y-2 font-bold">
+                <li class="border-l-2 border-l-rose-400 pl-2">
+                  <span class="text-rose-700 block">🚨 Sanksi Pribadi</span>
+                  <span class="font-normal text-slate-600 block text-[9px]">
+                    Denda hanya berlaku pada pengurangan XP individu pelanggar.
+                  </span>
+                </li>
+                <li class="border-l-2 border-l-rose-400 pl-2">
+                  <span class="text-rose-700 block">🚨 Sanksi Berdampak</span>
+                  <span class="font-normal text-slate-600 block text-[9px]">
+                    Pengurangan XP siswa &amp; pemotongan koin kas Regunya, serta memblokir menu belanja/misi regu
+                    tersebut.
+                  </span>
+                </li>
+                <li class="border-l-2 border-l-rose-400 pl-2">
+                  <span class="text-rose-700 block">🚨 Sanksi Kolektif</span>
+                  <span class="font-normal text-slate-600 block text-[9px]">
+                    Dikenakan langsung kepada seluruh anggota regu akibat kelalaian bersama (fitur belanja &amp; misi
+                    terkunci).
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <button onclick="closePanduanModal()" class="btn-3d btn-primary w-full mt-4">SAYA MENGERTI</button>
+        </div>
+      </div>
+
+      <!-- Admin Login Modal -->
+      <div id="admin-login-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative">
+          <button onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i class="fa-solid fa-user-shield text-3xl text-indigo-600"></i>
+            </div>
+            <h3 class="title-font font-bold text-xl text-slate-800">Satelit Pembina</h3>
+            <p class="text-[11px] font-semibold text-slate-500">Akses: Rahasia</p>
+          </div>
+          <div class="mb-4">
+            <input
+              type="password"
+              id="admin-pass-input"
+              placeholder="••••"
+              class="w-full text-center text-2xl tracking-widest font-bold border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+          <button onclick="verifyAdminLogin()" class="btn-3d btn-primary w-full">
+            <i class="fa-solid fa-unlock mr-2"></i>
+            Akses Admin
+          </button>
+        </div>
+      </div>
+
+      <!-- Avatar Modal -->
+      <div id="avatar-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[90vh] flex flex-col">
+          <button onclick="closeAvatarModal()" class="absolute top-4 right-4 text-slate-400">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4 shrink-0">
+            Ajukan Perubahan Avatar / Foto Profil
+          </h3>
+
+          <div class="overflow-y-auto no-scrollbar space-y-4 pr-1">
+            <!-- Pilihan Unggah Foto Asli -->
+            <div class="bg-indigo-50 border border-indigo-200 p-3 rounded-xl flex items-center gap-3">
+              <div
+                id="student-avatar-upload-preview"
+                class="w-14 h-14 bg-white rounded-full border-2 border-indigo-200 flex items-center justify-center overflow-hidden text-xl shrink-0 shadow-inner"
+              >
+                👤
+              </div>
+              <div class="flex-1">
+                <label class="block text-[10px] font-bold text-slate-600 mb-1">Unggah Foto Aslimu</label>
+                <input
+                  type="file"
+                  id="student-photo-input"
+                  accept="image/*"
+                  class="w-full text-[9px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-indigo-100 file:text-indigo-700"
+                />
+              </div>
+            </div>
+
+            <div class="text-xs font-bold text-slate-400 text-center uppercase tracking-wider py-1 border-b">
+              Atau Pilih Emoji Default
+            </div>
+            <div class="grid grid-cols-4 gap-3" id="avatar-grid"></div>
+          </div>
+
+          <p class="text-[9px] text-center font-bold text-amber-600 mt-4 shrink-0 bg-amber-50 p-2 rounded-lg">
+            <i class="fa-solid fa-circle-info mr-1"></i>
+            Perubahan membutuhkan persetujuan Pembina sebelum tampil di profil Anda.
+          </p>
+        </div>
+      </div>
+
+      <!-- Reward Claim Confirmation Modal -->
+      <div
+        id="reward-purchase-modal"
+        class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"
+      >
+        <div class="card-3d bg-white w-full max-w-md p-6 relative">
+          <button onclick="closeRewardModal()" class="absolute top-4 right-4 text-slate-400">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-2" id="reward-modal-title">
+            Konfirmasi Reward
+          </h3>
+          <p class="text-xs text-slate-500 text-center mb-4" id="reward-modal-desc"></p>
+          <div
+            id="reward-pinru-requirement"
+            class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 text-xs font-bold text-amber-900"
+          >
+            <i class="fa-solid fa-triangle-exclamation mr-1 text-amber-600"></i>
+            Hanya Pinru/Wapinru yang dapat membelanjakan Koin Regu.
+          </div>
+          <div class="space-y-3 mb-4">
+            <label class="block text-xs font-bold text-slate-600 uppercase">Catatan Tambahan / Alasan Klaim</label>
+            <textarea
+              id="reward-claim-note"
+              placeholder="Tulis alasan atau persetujuan musyawarah..."
+              class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-3 focus:outline-none focus:border-amber-500 h-20"
+            ></textarea>
+          </div>
+          <button id="btn-confirm-reward-action" class="btn-3d btn-amber w-full">KIRIM AJUAN KLAIM</button>
+        </div>
+      </div>
+
+      <!-- Admin Form Modal: Student CRUD (With Photo) -->
+      <div id="admin-student-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[90vh] flex flex-col">
+          <button onclick="closeAdminStudentModal()" class="absolute top-4 right-4 text-slate-400 z-10">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4 shrink-0" id="student-modal-title">
+            Tambah Siswa
+          </h3>
+          <div class="overflow-y-auto no-scrollbar space-y-3 mb-4 pr-1">
+            <input type="hidden" id="form-student-id" />
+            <input type="hidden" id="form-student-avatar-data" />
+
+            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div
+                id="form-student-photo-preview"
+                class="w-16 h-16 rounded-full bg-white border-2 border-indigo-200 flex items-center justify-center overflow-hidden text-2xl shrink-0 shadow-inner"
+              >
+                👤
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-bold text-slate-600 mb-1">Upload Foto Profil</label>
+                <input
+                  type="file"
+                  id="form-student-photo"
+                  accept="image/*"
+                  class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Nama Lengkap</label>
+              <input
+                type="text"
+                id="form-student-name"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Kelas</label>
+                <input
+                  type="text"
+                  id="form-student-kelas"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Jenis Kelamin</label>
+                <select
+                  id="form-student-gender"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+                >
+                  <option value="Putra">Putra</option>
+                  <option value="Putri">Putri</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Regu</label>
+                <input
+                  type="text"
+                  id="form-student-regu"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Jabatan</label>
+                <select
+                  id="form-student-jabatan"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+                >
+                  <option value="Anggota">Anggota</option>
+                  <option value="Wapinru">Wapinru</option>
+                  <option value="Pinru">Pinru</option>
+                  <option value="Pratama">Pratama</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button onclick="saveStudentData()" class="btn-3d btn-primary w-full shrink-0" id="btn-save-student">
+            SIMPAN DATA
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Form Modal: SKU CRUD -->
+      <div id="admin-mission-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative">
+          <button onclick="closeAdminMissionModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="mission-modal-title">
+            Tambah Misi / SKU
+          </h3>
+          <div class="space-y-3 mb-4">
+            <input type="hidden" id="form-mission-id" />
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Poin/Kode</label>
+                <input
+                  type="text"
+                  id="form-mission-poin"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Reward XP</label>
+                <input
+                  type="number"
+                  id="form-mission-xp"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Judul Misi</label>
+              <input
+                type="text"
+                id="form-mission-title"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Deskripsi/Syarat</label>
+              <textarea
+                id="form-mission-desc"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500 h-16"
+              ></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Tingkat Kesulitan</label>
+              <select
+                id="form-mission-diff"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-indigo-500"
+              >
+                <option value="Mudah">Mudah</option>
+                <option value="Sedang">Sedang</option>
+                <option value="Sulit">Sulit</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="saveMissionData()" class="btn-3d btn-primary w-full bg-indigo-600 text-white">
+            SIMPAN MISI
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Form Modal: Kedai CRUD -->
+      <div id="admin-shop-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative">
+          <button onclick="closeAdminShopModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="shop-modal-title">
+            Tambah Hadiah Kedai
+          </h3>
+          <div class="space-y-3 mb-4">
+            <input type="hidden" id="form-shop-id" />
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Kategori</label>
+                <select
+                  id="form-shop-type"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                >
+                  <option value="Individu">Individu</option>
+                  <option value="Regu">Regu</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Ikon Emoji</label>
+                <input
+                  type="text"
+                  id="form-shop-icon"
+                  placeholder="🎁"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Nama Barang</label>
+              <input
+                type="text"
+                id="form-shop-name"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Deskripsi</label>
+              <input
+                type="text"
+                id="form-shop-desc"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Harga Poin/Koin</label>
+                <input
+                  type="number"
+                  id="form-shop-cost"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Syarat Min XP Level</label>
+                <input
+                  type="number"
+                  id="form-shop-xp"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                />
+              </div>
+            </div>
+          </div>
+          <button onclick="saveShopItemData()" class="btn-3d btn-amber w-full">SIMPAN HADIAH</button>
+        </div>
+      </div>
+
+      <!-- Admin Form Modal: Aturan Sanksi CRUD -->
+      <div
+        id="admin-sanc-rule-modal"
+        class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4"
+      >
+        <div class="card-3d bg-white w-full max-w-md p-6 relative">
+          <button
+            onclick="closeAdminSanctionRuleModal()"
+            class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+          >
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="sanc-rule-modal-title">
+            Tambah Aturan Sanksi
+          </h3>
+          <div class="space-y-3 mb-4">
+            <input type="hidden" id="form-sanc-rule-id" />
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Kategori</label>
+                <select
+                  id="form-sanc-rule-type"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                >
+                  <option value="Pribadi">Pribadi</option>
+                  <option value="Berdampak">Berdampak</option>
+                  <option value="Kolektif">Kolektif</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Aturan Sanksi</label>
+                <input
+                  type="text"
+                  id="form-sanc-rule-label"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                  placeholder="Cth: Atribut tidak lengkap"
+                />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Denda XP (Siswa)</label>
+                <input
+                  type="number"
+                  id="form-sanc-rule-xp"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600">Denda Koin (Regu)</label>
+                <input
+                  type="number"
+                  id="form-sanc-rule-coin"
+                  class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                />
+              </div>
+            </div>
+          </div>
+          <button onclick="saveSanctionRuleData()" class="btn-3d btn-rose w-full">SIMPAN ATURAN</button>
+        </div>
+      </div>
+
+      <!-- Admin Form Modal: Regu Edit -->
+      <div id="admin-regu-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative max-h-[90vh] flex flex-col">
+          <button onclick="closeAdminReguModal()" class="absolute top-4 right-4 text-slate-400 z-10">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4 shrink-0">
+            Edit Regu
+            <span id="regu-modal-name-title" class="text-amber-600"></span>
+          </h3>
+          <input type="hidden" id="form-regu-name-id" />
+          <input type="hidden" id="form-regu-logo-data" />
+
+          <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4">
+            <div
+              id="form-regu-logo-preview"
+              class="w-16 h-16 rounded-xl bg-white border-2 border-amber-200 flex items-center justify-center overflow-hidden text-3xl shrink-0 shadow-inner"
+            >
+              🛡️
+            </div>
+            <div class="flex-1">
+              <label class="block text-xs font-bold text-slate-600 mb-1">Upload Logo Regu</label>
+              <input
+                type="file"
+                id="form-regu-logo"
+                accept="image/*"
+                class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200 cursor-pointer"
+              />
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-600 mb-1">Atau Emoji (jika tidak upload)</label>
+            <input
+              type="text"
+              id="form-regu-emoji"
+              placeholder="Contoh: 🦅"
+              class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2 focus:border-amber-500 text-center text-lg"
+            />
+          </div>
+          <button onclick="saveReguData()" class="btn-3d btn-amber w-full shrink-0">SIMPAN LOGO</button>
+        </div>
+      </div>
+
+      <!-- Admin Form Modal: Restitusi CRUD -->
+      <div id="admin-rest-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-4">
+        <div class="card-3d bg-white w-full max-w-md p-6 relative">
+          <button
+            onclick="closeAdminRestitutionModal()"
+            class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+          >
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+          <h3 class="title-font font-bold text-lg text-slate-800 text-center mb-4" id="rest-modal-title">
+            Tambah Restitusi
+          </h3>
+          <div class="space-y-3 mb-4">
+            <input type="hidden" id="form-rest-id" />
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Nama Aksi Restitusi</label>
+              <input
+                type="text"
+                id="form-rest-label"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+                placeholder="Cth: Kerja Bakti"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600">Reward Pemulihan (Koin)</label>
+              <input
+                type="number"
+                id="form-rest-coin"
+                class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-2"
+              />
+            </div>
+          </div>
+          <button onclick="saveRestitutionData()" class="btn-3d btn-emerald w-full">SIMPAN RESTITUSI</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ==========================================
       // 🛡️ KONFIGURASI SUPABASE & LOCALSTORAGE
       // ==========================================
       let SUPABASE_URL = localStorage.getItem("prapatra_supabase_url") || "https://gvtgwimebnuwkslrcecs.supabase.co";
@@ -1105,9 +1994,7 @@
         if (relevantMsgs.length === 0)
           html = `<div class="flex-1 flex flex-col items-center justify-center text-slate-400 opacity-50"><i class="fa-regular fa-comments text-4xl mb-2"></i><p class="text-xs font-bold">Mulai percakapan...</p></div>`;
         container.innerHTML = html;
-        setTimeout(() => {
-          container.scrollTop = container.scrollHeight;
-        }, 10);
+        scrollChatToBottom(false);
       }
 
       async function sendChatMessage() {
@@ -1115,6 +2002,7 @@
         const text = input.value.trim();
         if (!text || !state.activeChatContactId) return;
         input.value = "";
+        scrollChatToBottom(false);
 
         const myId = state.currentView === "admin" ? "admin" : state.currentUser.id;
         const msg = {
@@ -1128,11 +2016,52 @@
 
         state.messages.push(msg);
         renderChatRoomMessages();
+        scrollChatToBottom(true);
 
         const { error } = await DatabaseService.insertMessage(msg);
         if (error) showToast("Gagal mengirim pesan", "❌");
       }
+      /* =====================================================
+            CHAT AUTO SCROLL + KEYBOARD FIX
+    ===================================================== */
 
+      function scrollChatToBottom(smooth = true) {
+        const container = document.getElementById("chat-messages-container");
+
+        if (!container) return;
+
+        requestAnimationFrame(() => {
+          container.scrollTo({
+            top: container.scrollHeight,
+
+            behavior: smooth ? "smooth" : "auto",
+          });
+        });
+      }
+
+      // ketika keyboard muncul
+
+      window.visualViewport?.addEventListener("resize", () => {
+        const wrapper = document.getElementById("chat-input-wrapper");
+
+        if (!wrapper) return;
+
+        const keyboardHeight = window.innerHeight - window.visualViewport.height;
+
+        wrapper.style.marginBottom = keyboardHeight > 0 ? keyboardHeight + "px" : "0px";
+
+        scrollChatToBottom(false);
+      });
+
+      // ketika fokus mengetik
+
+      document.addEventListener("focusin", (e) => {
+        if (e.target.id === "chat-input-text") {
+          setTimeout(() => {
+            scrollChatToBottom(false);
+          }, 250);
+        }
+      });
       function closeChatModal() {
         document.getElementById("chat-modal").classList.add("hidden");
       }
@@ -3675,4 +4604,7 @@ ${r.stat.totalScore}
         setTimeout(() => {
           window.location.reload();
         }, 1500);
-      }</script></body></html>
+      }
+    </script>
+  </body>
+</html>
