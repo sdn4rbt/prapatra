@@ -831,6 +831,64 @@
         if (lifetimeXp < 1000) return { id: 5, name: "Ramu Pratama", min: 800, max: 1000, percent: Math.min(100, ((lifetimeXp-800)/200)*100) };
         return { id: 6, name: "Penggalang Ramu", min: 1000, max: lifetimeXp, percent: 100 };
     }
+    /* =======================================================
+   LEADERBOARD SCORE (BARU)
+   ======================================================= */
+
+function getLeaderboardScore(student){
+
+    const attendance = getStudentAttendanceStats(student.id);
+
+    const rapor = getStudentRaporInfo(student);
+
+    const predikatBonus = {
+        A:300,
+        B:200,
+        C:100,
+        D:0
+    };
+
+    return (
+        (student.lifetimeXP || 0)
+        + ((student.coins || 0) * 10)
+        + ((attendance.percent || 0) * 5)
+        + (predikatBonus[rapor.predikat] || 0)
+    );
+
+}
+    
+    // ======================================================
+    // HELPER RANKING REGU (BARU)
+    // ======================================================
+
+    function getReguStatistics(reguName){
+
+        const anggota = state.students.filter(s=>s.regu===reguName);
+
+        const totalXP = anggota.reduce((t,s)=>t+(s.lifetimeXP||0),0);
+
+        const totalStudentCoins = anggota.reduce((t,s)=>t+(s.coins||0),0);
+
+        const reguCoins = state.regus[reguName]?.coins || 0;
+
+        const saldoKas = state.finances
+            .filter(f=>f.reguName===reguName)
+            .reduce((total,f)=>{
+                return total + (f.type==="Pemasukan"
+                    ? Number(f.amount)
+                    : -Number(f.amount));
+            },0);
+
+        return{
+            totalXP,
+            totalStudentCoins,
+            reguCoins,
+            saldoKas,
+            totalScore:
+                totalXP +
+                (reguCoins*100)
+        };
+    }
 
     function showToast(message, icon = "💡") {
         const toast = document.getElementById('custom-toast');
@@ -1159,13 +1217,28 @@
         const content = document.getElementById('leaderboard-content');
         if (isInd) {
             // Diubah menjadi Top 5
-            const topFilter = (gender) => state.students.filter(s => s.gender === gender).sort((a,b) => b.lifetimeXP - a.lifetimeXP).slice(0,5);
+            const topFilter = (gender)=>
+
+    state.students
+
+        .filter(s=>s.gender===gender)
+
+        .sort((a,b)=>{
+
+            return getLeaderboardScore(b)
+
+                - getLeaderboardScore(a);
+
+        })
+
+        .slice(0,5);
             let h = `<div><h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2"><i class="fa-solid fa-mars text-blue-500"></i> Top 5 Putra</h4><div class="space-y-2 mb-4">`;
             
             topFilter('Putra').forEach((s, idx) => {
                 const lvl = getLevelInfo(s.lifetimeXP);
                 const att = getStudentAttendanceStats(s.id);
                 const rapor = getStudentRaporInfo(s);
+                const leaderboardScore = getLeaderboardScore(s);
                 const predikatColor = rapor.predikat === 'A' ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : (rapor.predikat === 'B' ? 'bg-blue-100 text-blue-700 border-blue-300' : (rapor.predikat === 'C' ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-rose-100 text-rose-700 border-rose-300'));
 
                 h += `<div class="card-3d p-3 flex justify-between items-center bg-white border-l-4 border-l-blue-400">
@@ -1178,8 +1251,23 @@
                         </div>
                     </div>
                     <div class="text-right shrink-0 ml-2">
-                        <div class="font-black text-amber-600 text-xs">${s.lifetimeXP} XP</div>
-                        <div class="text-[8px] text-blue-500 font-black mt-0.5 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 inline-block">Hadir: ${att.percent}%</div>
+                        <div class="font-black text-amber-600 text-xs">
+
+    ${s.lifetimeXP} XP
+
+</div>
+
+<div class="text-[8px] text-emerald-600 font-black">
+
+    ⭐ ${leaderboardScore}
+
+</div>
+
+<div class="text-[8px] text-blue-500 font-black mt-0.5 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 inline-block">
+
+    Hadir: ${att.percent}%
+
+</div>
                     </div>
                 </div>`;
             });
@@ -1190,6 +1278,7 @@
                 const lvl = getLevelInfo(s.lifetimeXP);
                 const att = getStudentAttendanceStats(s.id);
                 const rapor = getStudentRaporInfo(s);
+                const leaderboardScore = getLeaderboardScore(s);
                 const predikatColor = rapor.predikat === 'A' ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : (rapor.predikat === 'B' ? 'bg-blue-100 text-blue-700 border-blue-300' : (rapor.predikat === 'C' ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-rose-100 text-rose-700 border-rose-300'));
 
                 h += `<div class="card-3d p-3 flex justify-between items-center bg-white border-l-4 border-l-pink-400">
@@ -1202,24 +1291,130 @@
                         </div>
                     </div>
                     <div class="text-right shrink-0 ml-2">
-                        <div class="font-black text-amber-600 text-xs">${s.lifetimeXP} XP</div>
-                        <div class="text-[8px] text-blue-500 font-black mt-0.5 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 inline-block">Hadir: ${att.percent}%</div>
+                        <div class="font-black text-amber-600 text-xs">
+
+    ${s.lifetimeXP} XP
+
+</div>
+
+<div class="text-[8px] text-emerald-600 font-black">
+
+    ⭐ ${leaderboardScore}
+
+</div>
+
+<div class="text-[8px] text-blue-500 font-black mt-0.5 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 inline-block">
+
+    Hadir: ${att.percent}%
+
+</div>
                     </div>
                 </div>`;
             });
             content.innerHTML = h + `</div></div>`;
-        } else {
-            content.innerHTML = Object.entries(state.regus).sort((a,b) => b[1].coins - a[1].coins).map((r, i) => `
-                <div class="card-3d p-4 flex justify-between items-center bg-white border-l-4 border-l-amber-500">
+        } else{
 
-                    <div class="flex items-center gap-3">
-                        <span class="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm shrink-0 ${i === 0 ? 'bg-yellow-100 border-yellow-300 text-yellow-700' : 'bg-slate-100 border-slate-300 text-slate-600'}">#${i+1}</span>
-                        <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border shadow-inner text-2xl overflow-hidden shrink-0">${renderAvatar(r[1].logo || '🛡️')}</div>
-                        <div class="min-w-0"><h4 class="font-extrabold text-slate-800 text-sm truncate">Regu ${r[0]}</h4><p class="text-[10px] text-slate-400 font-semibold uppercase truncate">Target: ${r[1].targetReward || '-'}</p></div>
-                    </div>
-                    <div class="text-right shrink-0"><span class="font-black text-amber-600 text-sm block"><i class="fa-solid fa-coins text-yellow-500"></i> ${r[1].coins}</span><span class="text-[8px] text-slate-400 font-bold uppercase">Koin Regu</span></div>
-                </div>`).join('');
-        }
+    const ranking = Object.keys(state.regus)
+        .map(name=>{
+
+            return{
+                name,
+                data:state.regus[name],
+                stat:getReguStatistics(name)
+            };
+
+        })
+        .sort((a,b)=>b.stat.totalScore-a.stat.totalScore);
+
+    content.innerHTML = ranking.map((r,i)=>`
+
+<div class="card-3d p-4 bg-white border-l-4 border-l-amber-500 flex justify-between items-center">
+
+<div class="flex items-center gap-3">
+
+<span class="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm shrink-0
+${i===0
+?'bg-yellow-100 border-yellow-300 text-yellow-700'
+:'bg-slate-100 border-slate-300 text-slate-600'}">
+
+#${i+1}
+
+</span>
+
+<div class="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 border shadow-inner text-2xl overflow-hidden">
+
+${renderAvatar(r.data.logo||'🛡️')}
+
+</div>
+
+<div>
+
+<h4 class="font-extrabold text-sm">
+
+Regu ${r.name}
+
+</h4>
+
+<p class="text-[9px] text-slate-500 font-bold">
+
+Target :
+${r.data.targetReward||'-'}
+
+</p>
+
+<div class="flex gap-3 mt-1 flex-wrap">
+
+<span class="text-[9px] font-black text-amber-700">
+
+<i class="fa-solid fa-coins"></i>
+
+${r.stat.reguCoins} Koin
+
+</span>
+
+<span class="text-[9px] font-black text-indigo-700">
+
+<i class="fa-solid fa-star"></i>
+
+${r.stat.totalXP} XP
+
+</span>
+
+<span class="text-[9px] font-black text-emerald-700">
+
+<i class="fa-solid fa-wallet"></i>
+
+Rp ${r.stat.saldoKas.toLocaleString('id-ID')}
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="text-right">
+
+<div class="text-[10px] font-black text-slate-500 uppercase">
+
+Skor Regu
+
+</div>
+
+<div class="text-lg font-black text-amber-700">
+
+${r.stat.totalScore}
+
+</div>
+
+</div>
+
+</div>
+
+`).join('');
+
+}
     }
 
     let logoClickCount = 0; let logoClickTimer = null;
