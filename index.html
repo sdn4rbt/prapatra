@@ -21,7 +21,10 @@
 
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
+    <!-- html2canvas untuk Ekspor PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
       body {
         font-family: "Nunito", sans-serif;
@@ -152,8 +155,20 @@
       #chat-input-wrapper {
         background: #fff;
       }
-      #loading-overlay {
+    #loading-overlay {
         backdrop-filter: blur(4px);
+      }
+
+      /* Animasi Running Text */
+      @keyframes marquee {
+        0% { transform: translateX(100vw); }
+        100% { transform: translateX(-100%); }
+      }
+      .animate-marquee {
+        display: inline-block;
+        white-space: nowrap;
+        animation: marquee 15s linear infinite;
+        will-change: transform;
       }
     </style>
   </head>
@@ -166,14 +181,26 @@
             PRAPATRA QUEST
           </span>
         </div>
-        <div
-          class="text-[9px] font-bold text-amber-300 uppercase tracking-widest border border-amber-600/40 px-2 py-0.5 rounded bg-amber-900/40"
-          id="nav-school"
-        >
-          SDN 4 Rambutan
+        <div class="flex flex-col items-end gap-1">
+          <div
+            class="text-[9px] font-bold text-amber-300 uppercase tracking-widest border border-amber-600/40 px-2 py-0.5 rounded bg-amber-900/40"
+            id="nav-school"
+          >
+            SDN 4 Rambutan
+          </div>
+    <div id="sync-status" class="flex items-center gap-1 bg-amber-900/40 px-1.5 py-0.5 rounded border border-amber-600/40">
+            <div id="sync-indicator" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+            <span id="sync-text" class="text-[7px] font-black text-emerald-200 tracking-wider">ONLINE</span>
+          </div>
         </div>
       </div>
-
+      
+      <!-- Live 3 Log Aktivitas (Running Text) -->
+      <div class="bg-amber-950 text-amber-200 text-[10px] font-bold py-1.5 overflow-hidden whitespace-nowrap relative z-20 flex items-center border-b border-amber-800 shadow-sm">
+        <div class="absolute left-0 bg-amber-950 z-10 px-2 text-amber-400 font-black flex items-center gap-1 shadow-[5px_0_10px_rgba(69,26,3,1)]"><i class="fa-solid fa-bolt animate-pulse"></i> LIVE:</div>
+        <div id="running-text-content" class="animate-marquee pl-14">Memuat aktivitas terbaru...</div>
+      </div>
+      
       <!-- Banner Notifikasi Sanksi Spesifik -->
       <div
         id="sanction-banner"
@@ -1319,6 +1346,7 @@
         loadAppIdentity();
 
         if (!supabaseClient) {
+          updateNetworkStatus();
           document.getElementById("loading-overlay").classList.add("opacity-0", "pointer-events-none");
           renderMainView();
           return;
@@ -1594,6 +1622,7 @@
           console.error("Load Error:", e);
           showToast("Gagal Memuat Cloud: Pastikan tabel Supabase lengkap.", "⚠️");
         }
+        updateNetworkStatus();
         document.getElementById("loading-overlay").classList.add("opacity-0", "pointer-events-none");
         renderMainView();
 
@@ -2130,13 +2159,38 @@
         renderMainView();
       }
 
-      function closeAvatarModal() {
+    function closeAvatarModal() {
         document.getElementById("avatar-modal").classList.add("hidden");
+      }
+
+      function updateLiveRunningText() {
+        const container = document.getElementById("running-text-content");
+        if (!container) return;
+        
+        let acts = [];
+        if(state.finances.length > 0) acts.push({ icon: '💸', text: `Kas Regu ${state.finances[0].reguName}: ${state.finances[0].description}` });
+        if(state.shopClaims.length > 0) acts.push({ icon: '🎁', text: `Kedai: ${state.shopClaims[0].itemName} (${state.shopClaims[0].status})` });
+        if(state.reguSanctionsLog.length > 0) acts.push({ icon: '⚠️', text: `Disiplin: ${state.reguSanctionsLog[0].reason}` });
+        
+        if(acts.length < 3 && state.students.length > 0) {
+            state.students.slice(0,3).forEach(s => {
+                if(s.xpHistory.length > 0 && acts.length < 3) acts.push({ icon: '⭐', text: `XP ${s.name}: ${s.xpHistory[0].reason}` });
+            });
+        }
+        
+        if (acts.length === 0) {
+            container.innerHTML = "Belum ada aktivitas terbaru.";
+            return;
+        }
+        
+        container.innerHTML = acts.map(act => `<span class="mx-4"><span class="mr-1">${act.icon}</span>${act.text}</span>`).join(" • ");
       }
 
       function renderMainView() {
         const main = document.getElementById("main-scene");
         document.getElementById("sanction-banner").classList.add("hidden");
+
+        updateLiveRunningText(); // Panggil update running text
 
         const chatFab = document.getElementById("student-chat-fab");
         // FAB Chat disembunyikan permanen karena digantikan oleh tombol di Kartu Profil Siswa
@@ -2147,7 +2201,7 @@
         else if (state.currentView === "admin") renderAdminView(main);
       }
 
-      function renderDashboard(container) {
+    function renderDashboard(container) {
         // Kalkulasi Total Kas Iuran Global (Real-time)
         let totalKas = 0;
         state.finances.forEach((f) => {
@@ -2989,7 +3043,7 @@ ${r.stat.totalScore}
                 <button onclick="switchAdminSection('finances')" id="btn-adm-finances" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">💸 Kas Uang</button>
                 <button onclick="switchAdminSection('missions')" id="btn-adm-missions" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🎯 Misi SKU</button>
                 <button onclick="switchAdminSection('shop')" id="btn-adm-shop" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🎁 Kedai</button>
-                <button onclick="switchAdminSection('bonus')" id="btn-adm-bonus" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🌟 Bonus</button>
+                <button onclick="switchAdminSection('bonus')" id="btn-adm-bonus" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">🌟 Bonus & Lulus</button>
                 <button onclick="switchAdminSection('discipline')" id="btn-adm-discipline" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">⚠️ Disiplin</button>
                 <button onclick="switchAdminSection('rapor')" id="btn-adm-rapor" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">📊 Rapor Excel</button>
                 <button onclick="switchAdminSection('appsettings')" id="btn-adm-appsettings" class="px-3 py-2 text-[9px] font-black rounded-lg transition-all uppercase whitespace-nowrap">⚙️ Pengaturan</button>
@@ -3876,20 +3930,97 @@ ${r.stat.totalScore}
         });
       }
 
-      // BONUS ADMIN
+    // BONUS ADMIN & LULUSKAN SKU LANGSUNG
       function renderAdminBonus(el) {
         el.innerHTML = `
-        <div class="mb-4"><h3 class="title-font font-black text-lg text-slate-800">Bonus Prestasi</h3><p class="text-[10px] font-bold text-slate-500 uppercase">Pemberian XP Bebas</p></div>
-        <div class="card-3d p-4 bg-white mb-6">
+        <div class="mb-4"><h3 class="title-font font-black text-lg text-slate-800">Pemberian Khusus</h3><p class="text-[10px] font-bold text-slate-500 uppercase">Pemberian XP Bebas & Kelulusan SKU Langsung</p></div>
+        
+        <div class="card-3d p-4 bg-white mb-6 border-l-4 border-l-emerald-500">
+            <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Luluskan SKU (Langsung / Kolektif)</h4>
             <div class="space-y-3">
-                <select id="bonus-student" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3">
+                <select id="direct-sku-target" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
+                    <option value="" disabled selected>Pilih Siswa atau Regu (Ketik nama untuk mencari)...</option>
+                    <optgroup label="Kolektif Regu">
+                        ${Object.keys(state.regus).map((r) => `<option value="r_${r}">Semua Anggota Regu ${r}</option>`).join("")}
+                    </optgroup>
+                    <optgroup label="Siswa Individu">
+                        ${state.students.map((s) => `<option value="s_${s.id}">${s.name} (${s.regu})</option>`).join("")}
+                    </optgroup>
+                </select>
+                <select id="direct-sku-id" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
+                    <option value="" disabled selected>Pilih SKU yang diluluskan...</option>
+                    ${getSortedQuests().map((q) => `<option value="${q.id}">SKU ${q.poin}: ${q.title} (+${q.xp} XP)</option>`).join("")}
+                </select>
+                <button onclick="directApproveSKU()" class="btn-3d btn-emerald w-full text-[10px] h-10 min-h-0"><i class="fa-solid fa-check-double mr-1"></i> LULUSKAN SKU</button>
+            </div>
+        </div>
+
+        <div class="card-3d p-4 bg-white mb-6 border-l-4 border-l-amber-500">
+            <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Bonus Prestasi (XP Bebas)</h4>
+            <div class="space-y-3">
+                <select id="bonus-student" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
                     ${state.students.map((s) => `<option value="${s.id}">${s.name} (${s.lifetimeXP} Lvl XP)</option>`).join("")}
                 </select>
                 <input type="text" id="bonus-reason" placeholder="Cth: Menjadi Petugas Upacara" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-3">
-                <select id="bonus-amount" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3"><option value="10">+10 XP (Ringan)</option><option value="25">+25 XP (Sedang)</option><option value="50">+50 XP (Tinggi)</option></select>
+                <select id="bonus-amount" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50"><option value="10">+10 XP (Ringan)</option><option value="25">+25 XP (Sedang)</option><option value="50">+50 XP (Tinggi)</option></select>
                 <button onclick="giveBonus()" class="btn-3d btn-primary w-full text-[10px] h-10 min-h-0">BERIKAN BONUS</button>
             </div>
         </div>`;
+      }
+
+      async function directApproveSKU() {
+        const targetVal = document.getElementById("direct-sku-target").value;
+        const skuId = document.getElementById("direct-sku-id").value;
+
+        if (!targetVal || !skuId) return showToast("Pilih target dan SKU!", "⚠️");
+
+        const quest = state.quests.find((q) => q.id === skuId);
+        if (!quest) return showToast("SKU tidak valid!", "⚠️");
+
+        const btn = document.querySelector("button[onclick='directApproveSKU()']");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> MEMPROSES...';
+        btn.disabled = true;
+
+        let targets = [];
+        if (targetVal.startsWith("r_")) {
+            const regu = targetVal.substring(2);
+            targets = state.students.filter(s => s.regu === regu);
+        } else if (targetVal.startsWith("s_")) {
+            const sId = targetVal.substring(2);
+            const student = state.students.find(s => s.id === sId);
+            if (student) targets.push(student);
+        }
+
+        if (targets.length === 0) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return showToast("Tidak ada siswa ditemukan!", "⚠️");
+        }
+
+        let count = 0;
+        for (let student of targets) {
+            const existingCompleted = student.completedQuests.find(cq => cq.id === skuId && cq.status === "completed");
+            if (!existingCompleted) {
+                // Hapus pengajuan pending jika ada untuk sku yang sama
+                student.completedQuests = student.completedQuests.filter(cq => cq.id !== skuId);
+                // Setujui dan berikan record XP
+                student.completedQuests.push({ id: skuId, status: "completed", date: new Date().toISOString() });
+                addXPRecord(student, quest.xp, `Lulus SKU ${quest.poin} (Otomatis)`, false);
+                await asyncSyncStudent(student);
+                count++;
+            }
+        }
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        if (count > 0) {
+            showToast(`${count} siswa berhasil diluluskan SKU ${quest.poin}!`, "✅");
+            switchAdminSection("bonus"); // reload tab
+        } else {
+            showToast("Semua target yang dipilih sudah lulus SKU ini.", "ℹ️");
+        }
       }
       function giveBonus() {
         const sId = document.getElementById("bonus-student").value,
@@ -4398,18 +4529,48 @@ ${r.stat.totalScore}
       let filterRaporKelas = "Semua";
       let filterRaporRegu = "Semua";
 
-      function renderAdminRapor(el) {
+    function renderAdminRapor(el) {
         const uniqueClasses = ["Semua", ...new Set(state.students.map((s) => s.kelas))].filter(Boolean);
         const uniqueRegus = ["Semua", ...Object.keys(state.regus)];
-
         let html = `
-        <div class="mb-4">
-            <h3 class="title-font font-black text-lg text-slate-800">Rapor Perkembangan</h3>
-            <p class="text-[10px] font-bold text-slate-500 uppercase">Analisis Predikat Untuk Laporan Pembina</p>
-        </div>
-
-        <div class="card-3d bg-white p-4 mb-5 border-l-4 border-l-indigo-600">
-            <div class="grid grid-cols-2 gap-3 mb-4">
+        
+																<div class="mb-4">
+																	<h3 class="title-font font-black text-lg text-slate-800">Cetak Penghargaan</h3>
+																	<p class="text-[10px] font-bold text-slate-500 uppercase">Pramuka Tergiat Berdasarkan Perolehan XP</p>
+																</div>
+																<div class="card-3d bg-white p-4 mb-5 border-l-4 border-l-amber-500">
+																	<div class="grid grid-cols-2 gap-3 mb-4">
+																		<div>
+																			<label class="block text-[10px] font-bold text-slate-500 mb-1">Periode Penghargaan</label>
+																			<select id="award-month" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2 bg-slate-50">
+																				<option value="all">Keseluruhan (All-Time)</option>
+																				<option value="01">Januari</option>
+																				<option value="02">Februari</option>
+																				<option value="03">Maret</option>
+																				<option value="04">April</option>
+																				<option value="05">Mei</option>
+																				<option value="06">Juni</option>
+																				<option value="07">Juli</option>
+																				<option value="08">Agustus</option>
+																				<option value="09">September</option>
+																				<option value="10">Oktober</option>
+																				<option value="11">November</option>
+																				<option value="12">Desember</option>
+																			</select>
+																		</div>
+																		<div class="flex items-end">
+																			<button onclick="exportPenghargaanPNG()" class="btn-3d btn-amber w-full text-[10px] h-10 min-h-0">
+																				<i class="fa-solid fa-image mr-1"></i> CETAK GAMBAR (PNG)
+																			</button>
+																		</div>
+																	</div>
+																</div>
+																<div class="mb-4">
+																	<h3 class="title-font font-black text-lg text-slate-800">Rapor Perkembangan</h3>
+																	<p class="text-[10px] font-bold text-slate-500 uppercase">Analisis Predikat Untuk Laporan Pembina</p>
+																</div>
+																<div class="card-3d bg-white p-4 mb-5 border-l-4 border-l-indigo-600">
+																	<div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 mb-1">Filter Kelas</label>
                     <select id="rapor-filter-kelas" onchange="filterRapor()" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2 bg-slate-50">
@@ -4496,6 +4657,192 @@ ${r.stat.totalScore}
         link.click();
         link.remove();
         showToast("Rapor berhasil diekspor!", "📊");
+      }
+      
+      // LOGIKA KALKULASI PENGHARGAAN & CETAK PNG
+      function calculateStudentScore(student, monthCode) {
+        if (monthCode === 'all') return student.lifetimeXP || 0;
+        let total = 0;
+        student.xpHistory.forEach(log => {
+            let d = log.date.toLowerCase();
+            let match = false;
+            if (monthCode === '01' && d.includes('jan')) match = true;
+            if (monthCode === '02' && d.includes('feb')) match = true;
+            if (monthCode === '03' && d.includes('mar')) match = true;
+            if (monthCode === '04' && d.includes('apr')) match = true;
+            if (monthCode === '05' && d.includes('mei')) match = true;
+            if (monthCode === '06' && d.includes('jun')) match = true;
+            if (monthCode === '07' && d.includes('jul')) match = true;
+            if (monthCode === '08' && (d.includes('agu') || d.includes('agt'))) match = true;
+            if (monthCode === '09' && d.includes('sep')) match = true;
+            if (monthCode === '10' && d.includes('okt')) match = true;
+            if (monthCode === '11' && d.includes('nov')) match = true;
+            if (monthCode === '12' && d.includes('des')) match = true;
+
+            if (match) {
+                let val = parseInt(log.change.replace('+', ''));
+                if (!isNaN(val) && val > 0) total += val;
+            }
+        });
+        return total;
+      }
+
+      async function exportPenghargaanPNG() {
+        const btn = document.querySelector('button[onclick="exportPenghargaanPNG()"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> MEMPROSES...';
+        btn.disabled = true;
+
+        const monthCode = document.getElementById("award-month").value;
+        const monthLabel = document.getElementById("award-month").options[document.getElementById("award-month").selectedIndex].text;
+
+        let studentsScores = state.students.map(s => {
+            return { ...s, awardScore: calculateStudentScore(s, monthCode) };
+        });
+
+        let topPutra = studentsScores.filter(s => s.gender === 'Putra' && s.awardScore > 0).sort((a, b) => b.awardScore - a.awardScore).slice(0, 3);
+        let topPutri = studentsScores.filter(s => s.gender === 'Putri' && s.awardScore > 0).sort((a, b) => b.awardScore - a.awardScore).slice(0, 3);
+
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.width = '1200px';
+        // Background hijau ala hutan/alam pramuka
+        container.style.background = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%25\' height=\'100%25\'%3E%3Cdefs%3E%3ClinearGradient id=\'g\' x1=\'0%25\' y1=\'0%25\' x2=\'0%25\' y2=\'100%25\'%3E%3Cstop offset=\'0%25\' stop-color=\'%23059669\'/%3E%3Cstop offset=\'100%25\' stop-color=\'%230f766e\'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'url(%23g)\'/%3E%3C/svg%3E")';
+        container.style.padding = '40px';
+        container.style.fontFamily = '"Nunito", sans-serif';
+        container.style.boxSizing = 'border-box';
+        container.style.overflow = 'hidden';
+
+        const getRankHtml = (students, type) => {
+          let html = '';
+          const rankColors = ['#facc15', '#cbd5e1', '#d97706']; // Gold, Silver, Bronze
+          const rankShadows = ['#ca8a04', '#94a3b8', '#92400e'];
+          const themeColor = type === 'Putra' ? '#3b82f6' : '#ec4899';
+          const themeBg = type === 'Putra' ? '#eff6ff' : '#fdf2f8';
+
+          for (let i = 0; i < 3; i++) {
+            if (!students[i]) continue;
+            const s = students[i];
+            const att = getStudentAttendanceStats(s.id);
+            const skuCount = s.completedQuests.filter((q) => q.status === "completed").length;
+            const avatarStr = s.avatarEmoji.startsWith('data:image') ? `<img src="${s.avatarEmoji}" style="width:100%; height:100%; object-fit:cover;">` : s.avatarEmoji;
+
+            html += `
+              <div style="background: white; border-radius: 20px; padding: 15px 25px; margin-bottom: 20px; display: flex; align-items: center; border: 4px solid ${rankColors[i]}; position: relative;">
+                <!-- Rank Badge Kiri -->
+                <div style="position: absolute; left: -25px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center;">
+                  <div style="width: 50px; height: 50px; background: ${rankColors[i]}; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); z-index: 2;">${i + 1}</div>
+                  <div style="display:flex; justify-content:center; margin-top: -5px; gap: 4px;">
+                    <div style="width:14px; height:25px; background:${rankShadows[i]}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%);"></div>
+                    <div style="width:14px; height:25px; background:${rankShadows[i]}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%);"></div>
+                  </div>
+                </div>
+
+                <!-- Avatar Box -->
+                <div style="margin-left: 30px; width: 90px; height: 90px; border-radius: 50%; background: ${themeBg}; border: 5px solid ${themeColor}; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; flex-shrink: 0; box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);">
+                  ${avatarStr}
+                </div>
+
+                <!-- Text Info -->
+                <div style="margin-left: 25px; flex: 1;">
+                  <div style="font-size: 1.6rem; font-weight: 900; color: #1e293b; margin-bottom: 4px; font-family:'Fredoka', sans-serif;">${s.name}</div>
+                  <div style="font-size: 1.1rem; font-weight: 800; color: ${themeColor}; margin-bottom: 12px;">Regu ${s.regu}</div>
+                  <div style="display: flex; gap: 12px;">
+                    <div style="background: #10b981; color: white; padding: 6px 10px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; flex:1; text-align:center; box-shadow: 0 3px 0 #059669;">Hadir:<br><span style="font-size:1.2rem;">${att.percent}%</span></div>
+                    <div style="background: ${themeColor}; color: white; padding: 6px 10px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; flex:1; text-align:center; box-shadow: 0 3px 0 ${type === 'Putra' ? '#2563eb' : '#db2777'};">SKU:<br><span style="font-size:1.2rem;">${skuCount}/30</span></div>
+                    <div style="background: #f59e0b; color: white; padding: 6px 10px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; flex:1; text-align:center; box-shadow: 0 3px 0 #d97706;">XP:<br><span style="font-size:1.2rem;">${s.awardScore}</span></div>
+                  </div>
+                </div>
+
+                <!-- Medal Kanan Kecil -->
+                <div style="position: absolute; right: 25px; top: 15px; text-align:center;">
+                  <div style="font-size: 2rem;">🏅</div>
+                  <div style="font-weight: 900; color: #94a3b8; font-size: 1.5rem; margin-top: -5px;">${i + 1}</div>
+                </div>
+              </div>`;
+          }
+          if (students.length === 0) html = `<div style="text-align:center; padding: 30px; font-weight:bold; color:#64748b; font-size: 1.2rem;">Belum ada data perolehan XP.</div>`;
+          return html;
+        };
+
+        const today = new Date();
+        const dateStr = `${today.getDate()} ${['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][today.getMonth()]} ${today.getFullYear()}`;
+
+        container.innerHTML = `
+          <!-- Header Teks 3D -->
+          <div style="text-align:center; margin-bottom: 40px; position: relative; z-index: 10;">
+            <h1 style="font-family:'Fredoka', sans-serif; font-size: 5rem; color: #fbbf24; text-shadow: -3px -3px 0 #78350f, 3px -3px 0 #78350f, -3px 3px 0 #78350f, 3px 3px 0 #78350f, 0 8px 0 #451a03; margin:0; letter-spacing: 3px;">PRAMUKA TERGIAT</h1>
+            <div style="display: inline-block; background: linear-gradient(to bottom, #b45309, #78350f); color: white; padding: 12px 50px; border-radius: 40px; border: 4px solid #fcd34d; font-weight: 900; font-size: 1.6rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transform: translateY(-10px);">
+              PERIODE: ${monthLabel.toUpperCase()}
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; gap: 30px; margin-bottom: 30px;">
+            <!-- Kolom Putra -->
+            <div style="flex: 1; background: #fafafa; border-radius: 30px; padding: 30px; border: 8px solid #60a5fa; box-shadow: inset 0 0 0 6px white, 0 15px 30px rgba(0,0,0,0.2); position: relative; padding-top: 50px;">
+              <div style="position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 10px 40px; border-radius: 20px; font-family:'Fredoka', sans-serif; font-size: 2.5rem; font-weight: 900; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px;">
+                 <span style="font-size:2rem; color:#fcd34d;">⭐</span> PUTRA <span style="font-size:2rem; color:#fcd34d;">⭐</span>
+              </div>
+              ${getRankHtml(topPutra, 'Putra')}
+              <div style="background: #3b82f6; color: white; text-align: center; padding: 15px; border-radius: 15px; font-weight: 800; font-size: 1.2rem; box-shadow: 0 4px 0 #2563eb;">
+                🏆 Terus semangat! Jadilah Pramuka terbaik setiap hari! ✨
+              </div>
+            </div>
+
+            <!-- Kolom Putri -->
+            <div style="flex: 1; background: #fafafa; border-radius: 30px; padding: 30px; border: 8px solid #f472b6; box-shadow: inset 0 0 0 6px white, 0 15px 30px rgba(0,0,0,0.2); position: relative; padding-top: 50px;">
+              <div style="position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: #ec4899; color: white; padding: 10px 40px; border-radius: 20px; font-family:'Fredoka', sans-serif; font-size: 2.5rem; font-weight: 900; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px;">
+                 <span style="font-size:2rem; color:#fcd34d;">⭐</span> PUTRI <span style="font-size:2rem; color:#fcd34d;">⭐</span>
+              </div>
+              ${getRankHtml(topPutri, 'Putri')}
+              <div style="background: #ec4899; color: white; text-align: center; padding: 15px; border-radius: 15px; font-weight: 800; font-size: 1.2rem; box-shadow: 0 4px 0 #db2777;">
+                ❤️ Kreatif, Peduli, Berprestasi! Itulah Pramuka Putri! ✨
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer ala Papan Kayu -->
+          <div style="background: linear-gradient(to bottom, #92400e, #78350f); border-radius: 20px; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border: 4px solid #b45309; box-shadow: 0 10px 25px rgba(0,0,0,0.4); color: white;">
+              <div style="display: flex; align-items: center; gap: 15px;">
+                  <div style="font-size: 2.5rem; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 15px;">📅</div>
+                  <div>
+                      <div style="font-size: 1rem; font-weight: 700; color: #fcd34d;">Update Terakhir</div>
+                      <div style="font-size: 1.4rem; font-weight: 900;">${dateStr}</div>
+                  </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 15px; border-left: 2px solid rgba(255,255,255,0.2); border-right: 2px solid rgba(255,255,255,0.2); padding: 0 40px;">
+                  <div style="font-size: 2.5rem; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 15px;">⏱️</div>
+                  <div>
+                      <div style="font-size: 1rem; font-weight: 700; color: #fcd34d;">Data Dihitung dari</div>
+                      <div style="font-size: 1.4rem; font-weight: 900;">${monthCode === 'all' ? 'Semua Periode' : 'Periode Terpilih'}</div>
+                  </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 15px;">
+                  <div style="font-size: 2.5rem; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 15px;">⚜️</div>
+                  <div style="font-size: 1.4rem; font-weight: 900; color: #fef3c7;">Ukir Prestasi, Raih Masa Depan!</div>
+              </div>
+          </div>
+        `;
+
+        document.body.appendChild(container);
+        
+        try {
+            const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: null });
+            const link = document.createElement('a');
+            link.download = `Pramuka_Tergiat_${monthLabel.replace(/ /g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast("Gambar Penghargaan Berhasil Dicetak!", "🎉");
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal mencetak gambar.", "❌");
+        } finally {
+            document.body.removeChild(container);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
       }
 
       // ==========================================
@@ -4600,11 +4947,39 @@ ${r.stat.totalScore}
         localStorage.setItem("prapatra_supabase_key", key);
         showToast("Kredensial disimpan! Menyambungkan ulang ke Cloud...", "🔄");
 
-        // Memuat ulang halaman agar client Supabase baru ter-inisialisasi
+    // Memuat ulang halaman agar client Supabase baru ter-inisialisasi
         setTimeout(() => {
           window.location.reload();
         }, 1500);
       }
+
+      // Deteksi & Update Status Jaringan
+      function updateNetworkStatus() {
+          const isOnline = navigator.onLine;
+          const indicator = document.getElementById("sync-indicator");
+          const text = document.getElementById("sync-text");
+          if (indicator && text) {
+              if (isOnline && supabaseClient) {
+                  indicator.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse";
+                  text.innerText = "ONLINE (SINKRON)";
+                  text.className = "text-[7px] font-black text-emerald-200 tracking-wider";
+              } else {
+                  indicator.className = "w-1.5 h-1.5 rounded-full bg-rose-500";
+                  text.innerText = isOnline ? "MODE LOKAL" : "OFFLINE";
+                  text.className = "text-[7px] font-black text-rose-200 tracking-wider";
+              }
+          }
+      }
+
+      window.addEventListener('online', () => {
+          showToast("Kembali Online! Koneksi internet terhubung.", "🌐");
+          updateNetworkStatus();
+      });
+
+      window.addEventListener('offline', () => {
+          showToast("Internet Terputus! Beralih ke Mode Offline.", "🚫");
+          updateNetworkStatus();
+      });
     </script>
   </body>
 </html>
