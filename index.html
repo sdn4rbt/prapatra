@@ -4014,15 +4014,19 @@ function handleAttSearch(val) {
             <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Luluskan SKU (Langsung / Kolektif)</h4>
             <div class="space-y-3">
                 <input type="text" oninput="filterSkuTarget(this.value)" placeholder="🔍 Cari nama atau regu..." class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:border-emerald-500 focus:outline-none">
-                <select id="direct-sku-target" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
-                    <option value="" disabled selected>Pilih Siswa atau Regu (Ketik nama untuk mencari)...</option>
-                    <optgroup label="Kolektif Regu">
-                        ${Object.keys(state.regus).map((r) => `<option value="r_${r}">Semua Anggota Regu ${r}</option>`).join("")}
-                    </optgroup>
-                    <optgroup label="Siswa Individu">
-                        ${state.students.map((s) => `<option value="s_${s.id}">${s.name} (${s.regu})</option>`).join("")}
-                    </optgroup>
-                </select>
+                
+                <div id="sku-student-list" class="max-h-40 overflow-y-auto border-2 border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1">
+                    <label class="flex items-center gap-2 p-1.5 hover:bg-slate-100 rounded cursor-pointer border-b border-slate-200 mb-1">
+                        <input type="checkbox" onchange="toggleAllSku(this)" class="w-4 h-4 text-emerald-500 rounded border-slate-300 focus:ring-emerald-500">
+                        <span class="text-xs font-black text-emerald-700">Pilih Semua (Yang Tampil)</span>
+                    </label>
+                    ${state.students.map((s) => `
+                    <label class="sku-student-item flex items-center gap-2 p-1 hover:bg-slate-100 rounded cursor-pointer" data-name="${s.name.toLowerCase()}" data-regu="${s.regu.toLowerCase()}">
+                        <input type="checkbox" value="${s.id}" class="sku-student-cb w-4 h-4 text-emerald-500 rounded border-slate-300 focus:ring-emerald-500">
+                        <span class="text-xs font-semibold text-slate-700">${s.name} <span class="text-[10px] text-slate-400">(${s.regu})</span></span>
+                    </label>`).join("")}
+                </div>
+
                 <select id="direct-sku-id" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
                     <option value="" disabled selected>Pilih SKU yang diluluskan...</option>
                     ${getSortedQuests().map((q) => `<option value="${q.id}">SKU ${q.poin}: ${q.title} (+${q.xp} XP)</option>`).join("")}
@@ -4035,9 +4039,19 @@ function handleAttSearch(val) {
             <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Bonus Prestasi (XP Bebas)</h4>
             <div class="space-y-3">
                 <input type="text" oninput="filterBonusTarget(this.value)" placeholder="🔍 Cari nama atau regu..." class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:border-amber-500 focus:outline-none">
-                <select id="bonus-student" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
-                    ${state.students.map((s) => `<option value="${s.id}">${s.name} (${s.regu} • ${s.lifetimeXP} XP)</option>`).join("")}
-                </select>
+                
+                <div id="bonus-student-list" class="max-h-40 overflow-y-auto border-2 border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1">
+                    <label class="flex items-center gap-2 p-1.5 hover:bg-slate-100 rounded cursor-pointer border-b border-slate-200 mb-1">
+                        <input type="checkbox" onchange="toggleAllBonus(this)" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500">
+                        <span class="text-xs font-black text-amber-700">Pilih Semua (Yang Tampil)</span>
+                    </label>
+                    ${state.students.map((s) => `
+                    <label class="bonus-student-item flex items-center gap-2 p-1 hover:bg-slate-100 rounded cursor-pointer" data-name="${s.name.toLowerCase()}" data-regu="${s.regu.toLowerCase()}">
+                        <input type="checkbox" value="${s.id}" class="bonus-student-cb w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500">
+                        <span class="text-xs font-semibold text-slate-700">${s.name} <span class="text-[10px] text-slate-400">(${s.regu} • ${s.lifetimeXP} XP)</span></span>
+                    </label>`).join("")}
+                </div>
+
                 <input type="text" id="bonus-reason" placeholder="Cth: Menjadi Petugas Upacara" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-3">
                 <select id="bonus-amount" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50"><option value="10">+10 XP (Ringan)</option><option value="25">+25 XP (Sedang)</option><option value="50">+50 XP (Tinggi)</option></select>
                 <button onclick="giveBonus()" class="btn-3d btn-primary w-full text-[10px] h-10 min-h-0">BERIKAN BONUS</button>
@@ -4047,33 +4061,58 @@ function handleAttSearch(val) {
 
       function filterSkuTarget(val) {
         const q = val.toLowerCase();
-        const sel = document.getElementById("direct-sku-target");
-        const filteredRegus = Object.keys(state.regus).filter(r => r.toLowerCase().includes(q) || "regu".includes(q));
-        const filteredStudents = state.students.filter(s => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
-        
-        sel.innerHTML = `
-            <option value="" disabled selected>Pilih Siswa atau Regu (Ketik nama untuk mencari)...</option>
-            <optgroup label="Kolektif Regu">
-                ${filteredRegus.map((r) => `<option value="r_${r}">Semua Anggota Regu ${r}</option>`).join("")}
-            </optgroup>
-            <optgroup label="Siswa Individu">
-                ${filteredStudents.map((s) => `<option value="s_${s.id}">${s.name} (${s.regu})</option>`).join("")}
-            </optgroup>
-        `;
+        const items = document.querySelectorAll('.sku-student-item');
+        items.forEach(item => {
+          const name = item.getAttribute('data-name');
+          const regu = item.getAttribute('data-regu');
+          if (name.includes(q) || regu.includes(q)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      function toggleAllSku(source) {
+        const items = document.querySelectorAll('.sku-student-item');
+        items.forEach(item => {
+          if (item.style.display !== 'none') {
+            const cb = item.querySelector('.sku-student-cb');
+            if (cb) cb.checked = source.checked;
+          }
+        });
       }
 
       function filterBonusTarget(val) {
         const q = val.toLowerCase();
-        const sel = document.getElementById("bonus-student");
-        const filteredStudents = state.students.filter(s => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
-        sel.innerHTML = filteredStudents.map((s) => `<option value="${s.id}">${s.name} (${s.regu} • ${s.lifetimeXP} XP)</option>`).join("");
+        const items = document.querySelectorAll('.bonus-student-item');
+        items.forEach(item => {
+          const name = item.getAttribute('data-name');
+          const regu = item.getAttribute('data-regu');
+          if (name.includes(q) || regu.includes(q)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      function toggleAllBonus(source) {
+        const items = document.querySelectorAll('.bonus-student-item');
+        items.forEach(item => {
+          if (item.style.display !== 'none') {
+            const cb = item.querySelector('.bonus-student-cb');
+            if (cb) cb.checked = source.checked;
+          }
+        });
       }
 
       async function directApproveSKU() {
-        const targetVal = document.getElementById("direct-sku-target").value;
+        const checkedBoxes = document.querySelectorAll('.sku-student-cb:checked');
         const skuId = document.getElementById("direct-sku-id").value;
 
-        if (!targetVal || !skuId) return showToast("Pilih target dan SKU!", "⚠️");
+        if (checkedBoxes.length === 0) return showToast("Pilih minimal 1 siswa!", "⚠️");
+        if (!skuId) return showToast("Pilih SKU yang ingin diluluskan!", "⚠️");
 
         const quest = state.quests.find((q) => q.id === skuId);
         if (!quest) return showToast("SKU tidak valid!", "⚠️");
@@ -4083,33 +4122,21 @@ function handleAttSearch(val) {
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> MEMPROSES...';
         btn.disabled = true;
 
-        let targets = [];
-        if (targetVal.startsWith("r_")) {
-            const regu = targetVal.substring(2);
-            targets = state.students.filter(s => s.regu === regu);
-        } else if (targetVal.startsWith("s_")) {
-            const sId = targetVal.substring(2);
-            const student = state.students.find(s => s.id === sId);
-            if (student) targets.push(student);
-        }
-
-        if (targets.length === 0) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            return showToast("Tidak ada siswa ditemukan!", "⚠️");
-        }
-
         let count = 0;
-        for (let student of targets) {
-            const existingCompleted = student.completedQuests.find(cq => cq.id === skuId && cq.status === "completed");
-            if (!existingCompleted) {
-                // Hapus pengajuan pending jika ada untuk sku yang sama
-                student.completedQuests = student.completedQuests.filter(cq => cq.id !== skuId);
-                // Setujui dan berikan record XP
-                student.completedQuests.push({ id: skuId, status: "completed", date: new Date().toISOString() });
-                addXPRecord(student, quest.xp, `Lulus SKU ${quest.poin} (Otomatis)`, false);
-                await asyncSyncStudent(student);
-                count++;
+        for (let cb of checkedBoxes) {
+            const sId = cb.value;
+            const student = state.students.find(s => s.id === sId);
+            if (student) {
+                const existingCompleted = student.completedQuests.find(cq => cq.id === skuId && cq.status === "completed");
+                if (!existingCompleted) {
+                    // Hapus pengajuan pending jika ada untuk sku yang sama
+                    student.completedQuests = student.completedQuests.filter(cq => cq.id !== skuId);
+                    // Setujui dan berikan record XP
+                    student.completedQuests.push({ id: skuId, status: "completed", date: new Date().toISOString() });
+                    addXPRecord(student, quest.xp, `Lulus SKU ${quest.poin} (Otomatis)`, false);
+                    await asyncSyncStudent(student);
+                    count++;
+                }
             }
         }
 
@@ -4120,18 +4147,38 @@ function handleAttSearch(val) {
             showToast(`${count} siswa berhasil diluluskan SKU ${quest.poin}!`, "✅");
             switchAdminSection("bonus"); // reload tab
         } else {
-            showToast("Semua target yang dipilih sudah lulus SKU ini.", "ℹ️");
+            showToast("Semua siswa terpilih sudah lulus SKU ini.", "ℹ️");
         }
       }
+      
       function giveBonus() {
-        const sId = document.getElementById("bonus-student").value,
-          reason = document.getElementById("bonus-reason").value.trim(),
-          amt = parseInt(document.getElementById("bonus-amount").value);
+        const checkedBoxes = document.querySelectorAll('.bonus-student-cb:checked');
+        const reason = document.getElementById("bonus-reason").value.trim();
+        const amt = parseInt(document.getElementById("bonus-amount").value);
+        
+        if (checkedBoxes.length === 0) return showToast("Pilih minimal 1 siswa!", "⚠️");
         if (!reason) return showToast("Alasan wajib diisi!", "⚠️");
-        const s = state.students.find((st) => st.id === sId);
-        s.bonusXP += amt;
-        addXPRecord(s, amt, `Bonus: ${reason}`, true);
-        showToast(`Bonus +${amt} XP diserahkan ke ${s.name}`, "🌟");
+
+        const btn = document.querySelector("button[onclick='giveBonus()']");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> MEMPROSES...';
+        btn.disabled = true;
+
+        checkedBoxes.forEach(cb => {
+            const sId = cb.value;
+            const s = state.students.find((st) => st.id === sId);
+            if (s) {
+                s.bonusXP += amt;
+                // Add XP (pemicu sync di parameter akhir 'false' agar tidak tumpuk sync masif)
+                addXPRecord(s, amt, `Bonus: ${reason}`, false);
+                asyncSyncStudent(s);
+            }
+        });
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        showToast(`Bonus +${amt} XP diserahkan ke ${checkedBoxes.length} siswa`, "🌟");
         switchAdminSection("bonus");
       }
 
@@ -4150,9 +4197,19 @@ function handleAttSearch(val) {
             <div class="space-y-3">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 mb-1">Siswa (Untuk Sanksi Pribadi/Berdampak)</label>
-                    <select id="sanc-student" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2 bg-slate-50">
-                        ${state.students.map((s) => `<option value="${s.id}">${s.name} (${s.regu})</option>`).join("")}
-                    </select>
+                    <input type="text" oninput="filterSancTarget(this.value)" placeholder="🔍 Cari nama atau regu..." class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2.5 mb-2 bg-slate-50 focus:border-rose-500 focus:outline-none">
+                    
+                    <div id="sanc-student-list" class="max-h-40 overflow-y-auto border-2 border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1">
+                        <label class="flex items-center gap-2 p-1.5 hover:bg-slate-100 rounded cursor-pointer border-b border-slate-200 mb-1">
+                            <input type="checkbox" onchange="toggleAllSanc(this)" class="w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-500">
+                            <span class="text-xs font-black text-rose-700">Pilih Semua (Yang Tampil)</span>
+                        </label>
+                        ${state.students.map((s) => `
+                        <label class="sanc-student-item flex items-center gap-2 p-1 hover:bg-slate-100 rounded cursor-pointer" data-name="${s.name.toLowerCase()}" data-regu="${s.regu.toLowerCase()}">
+                            <input type="checkbox" value="${s.id}" class="sanc-student-cb w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-500">
+                            <span class="text-xs font-semibold text-slate-700">${s.name} <span class="text-[10px] text-slate-400">(${s.regu})</span></span>
+                        </label>`).join("")}
+                    </div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 mb-1">Regu (Untuk Sanksi Kolektif)</label>
@@ -4263,9 +4320,26 @@ function handleAttSearch(val) {
 
       function filterSancTarget(val) {
         const q = val.toLowerCase();
-        const sel = document.getElementById("sanc-student");
-        const filteredStudents = state.students.filter(s => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
-        sel.innerHTML = filteredStudents.map((s) => `<option value="${s.id}">${s.name} (${s.regu})</option>`).join("");
+        const items = document.querySelectorAll('.sanc-student-item');
+        items.forEach(item => {
+          const name = item.getAttribute('data-name');
+          const regu = item.getAttribute('data-regu');
+          if (name.includes(q) || regu.includes(q)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      }
+
+      function toggleAllSanc(source) {
+        const items = document.querySelectorAll('.sanc-student-item');
+        items.forEach(item => {
+          if (item.style.display !== 'none') {
+            const cb = item.querySelector('.sanc-student-cb');
+            if (cb) cb.checked = source.checked;
+          }
+        });
       }
 
       function filterRestRegu(val) {
@@ -4276,55 +4350,15 @@ function handleAttSearch(val) {
       }
 
       async function executeSanction() {
-        const sId = document.getElementById("sanc-student").value;
         const reguName = document.getElementById("sanc-regu").value;
         const ruleId = document.getElementById("sanc-rule").value;
         const rule = state.sanctionRules.find((r) => r.id === ruleId);
-        const s = state.students.find((st) => st.id === sId);
-
-        const newLogId = "sl-" + Date.now();
         const dateStr = new Date().toLocaleDateString("id-ID");
 
-        let logObj = null;
-
-        if (rule.type === "Pribadi") {
-          s.xp = Math.max(0, s.xp - rule.xpPenalty);
-          s.xpHistory.unshift({ date: dateStr, change: `-${rule.xpPenalty}`, reason: `Sanksi: ${rule.label}` });
-          asyncSyncStudent(s);
-          logObj = {
-            id: newLogId,
-            student_id: s.id,
-            regu: s.regu,
-            type: rule.type,
-            reason: `${s.name} - ${rule.label}`,
-            xp_penalty: rule.xpPenalty,
-            coin_penalty: 0,
-            resolved: false,
-            date: dateStr,
-            max_recoverable: 0,
-          };
-          showToast(`🚨 SANKSI PRIBADI: ${s.name} terkena sanksi ${rule.label}!`, "⚠️");
-        } else if (rule.type === "Berdampak") {
-          s.xp = Math.max(0, s.xp - rule.xpPenalty);
-          s.xpHistory.unshift({ date: dateStr, change: `-${rule.xpPenalty}`, reason: `Sanksi: ${rule.label}` });
-          asyncSyncStudent(s);
-          deductReguCoins(s.regu, rule.coinPenalty, `Anggota (${s.name}) denda: ${rule.label}`);
-          logObj = {
-            id: newLogId,
-            student_id: s.id,
-            regu: s.regu,
-            type: rule.type,
-            reason: `${s.name} - ${rule.label}`,
-            xp_penalty: rule.xpPenalty,
-            coin_penalty: rule.coinPenalty,
-            resolved: false,
-            date: dateStr,
-            max_recoverable: Math.floor(rule.coinPenalty * 0.8),
-          };
-          showToast(`🚨 SANKSI BERDAMPAK: Regu ${s.regu} terkunci denda dari ${s.name}!`, "⚠️");
-        } else if (rule.type === "Kolektif") {
+        if (rule.type === "Kolektif") {
+          const newLogId = "sl-" + Date.now();
           deductReguCoins(reguName, rule.coinPenalty, `Sanksi Regu: ${rule.label}`);
-          logObj = {
+          const logObj = {
             id: newLogId,
             student_id: null,
             regu: reguName,
@@ -4336,10 +4370,6 @@ function handleAttSearch(val) {
             date: dateStr,
             max_recoverable: Math.floor(rule.coinPenalty * 0.8),
           };
-          showToast(`🚨 SANKSI KOLEKTIF: Regu ${reguName} dikunci & denda bersama!`, "⚠️");
-        }
-
-        if (logObj) {
           state.reguSanctionsLog.unshift({
             id: logObj.id,
             studentId: logObj.student_id,
@@ -4353,6 +4383,76 @@ function handleAttSearch(val) {
             maxRecoverable: logObj.max_recoverable,
           });
           await DatabaseService.insertLoggedSanction(logObj);
+          showToast(`🚨 SANKSI KOLEKTIF: Regu ${reguName} dikunci & denda bersama!`, "⚠️");
+        } else {
+          // Logika untuk sanksi Pribadi atau Berdampak (Berbasis Checklist)
+          const checkedBoxes = document.querySelectorAll('.sanc-student-cb:checked');
+          if (checkedBoxes.length === 0) return showToast("Pilih minimal 1 siswa!", "⚠️");
+
+          const btn = document.querySelector("button[onclick='executeSanction()']");
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> MEMPROSES...';
+          btn.disabled = true;
+
+          for (let cb of checkedBoxes) {
+             const sId = cb.value;
+             const s = state.students.find((st) => st.id === sId);
+             if (s) {
+                const newLogId = "sl-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+                s.xp = Math.max(0, s.xp - rule.xpPenalty);
+                s.xpHistory.unshift({ date: dateStr, change: `-${rule.xpPenalty}`, reason: `Sanksi: ${rule.label}` });
+                asyncSyncStudent(s);
+                
+                let logObj = null;
+                if (rule.type === "Pribadi") {
+                  logObj = {
+                    id: newLogId,
+                    student_id: s.id,
+                    regu: s.regu,
+                    type: rule.type,
+                    reason: `${s.name} - ${rule.label}`,
+                    xp_penalty: rule.xpPenalty,
+                    coin_penalty: 0,
+                    resolved: false,
+                    date: dateStr,
+                    max_recoverable: 0,
+                  };
+                } else if (rule.type === "Berdampak") {
+                  deductReguCoins(s.regu, rule.coinPenalty, `Anggota (${s.name}) denda: ${rule.label}`);
+                  logObj = {
+                    id: newLogId,
+                    student_id: s.id,
+                    regu: s.regu,
+                    type: rule.type,
+                    reason: `${s.name} - ${rule.label}`,
+                    xp_penalty: rule.xpPenalty,
+                    coin_penalty: rule.coinPenalty,
+                    resolved: false,
+                    date: dateStr,
+                    max_recoverable: Math.floor(rule.coinPenalty * 0.8),
+                  };
+                }
+
+                if (logObj) {
+                  state.reguSanctionsLog.unshift({
+                    id: logObj.id,
+                    studentId: logObj.student_id,
+                    regu: logObj.regu,
+                    type: logObj.type,
+                    reason: logObj.reason,
+                    xpPenalty: logObj.xp_penalty,
+                    coinPenalty: logObj.coin_penalty,
+                    resolved: logObj.resolved,
+                    date: logObj.date,
+                    maxRecoverable: logObj.max_recoverable,
+                  });
+                  await DatabaseService.insertLoggedSanction(logObj);
+                }
+             }
+          }
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          showToast(`🚨 SANKSI DITERAPKAN kepada ${checkedBoxes.length} siswa!`, "⚠️");
         }
         switchAdminSection("discipline");
       }
