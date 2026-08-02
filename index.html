@@ -197,8 +197,23 @@
       
       <!-- Live 3 Log Aktivitas (Running Text) -->
       <div class="bg-amber-950 text-amber-200 text-[10px] font-bold py-1.5 overflow-hidden whitespace-nowrap relative z-20 flex items-center border-b border-amber-800 shadow-sm">
-        <div class="absolute left-0 bg-amber-950 z-10 px-2 text-amber-400 font-black flex items-center gap-1 shadow-[5px_0_10px_rgba(69,26,3,1)]"><i class="fa-solid fa-bolt animate-pulse"></i> LIVE:</div>
+        <div class="absolute left-0 bg-amber-950 z-10 px-2 text-amber-400 font-black flex items-center gap-1 shadow-[5px_0_10px_rgba(69,26,3,1)]"><i class="fa-solid fa-bolt animate-pulse"></i> LIVE AKTIVITAS:</div>
         <div id="running-text-content" class="animate-marquee pl-14">Memuat aktivitas terbaru...</div>
+      </div>
+     <!-- Panel Pengingat Latihan & Event -->
+      <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 z-20 relative shadow-sm flex divide-x divide-amber-200">
+        <div class="flex-1 py-1.5 px-3">
+          <div class="text-[9px] font-black text-amber-800 uppercase flex justify-between items-center">
+            <span>🔥 Latihan Rutin Hari Rabu</span> <span id="countdown-latihan" class="text-[9px]">--:--:--</span>
+          </div>
+          <div class="text-[8px] font-bold text-slate-500">12:00-13:00 WIB (Kak Dio & Kak Sulis) • Siap Mengabdi!</div>
+        </div>
+        <div class="flex-1 py-1.5 px-3">
+          <div class="text-[9px] font-black text-amber-800 uppercase flex justify-between items-center">
+            <span>⛺ 14 Agustus</span> <span id="countdown-pramuka" class="text-[9px]">-- Hari</span>
+          </div>
+          <div class="text-[8px] font-bold text-slate-500">Hari Pramuka. Darmaku Kubaktikan!</div>
+        </div>
       </div>
       
       <!-- Banner Notifikasi Sanksi Spesifik -->
@@ -1329,6 +1344,46 @@
         ],
       };
 
+      function initCountdowns() {
+        setInterval(() => {
+          const now = new Date();
+          
+          // 1. Hitung Mundur Latihan (Rabu 12:00 - 13:00)
+          const curDay = now.getDay(), curHour = now.getHours();
+          const isTraining = curDay === 3 && curHour >= 12 && curHour < 13;
+          const elLat = document.getElementById('countdown-latihan');
+          
+          if (isTraining) {
+            elLat.innerHTML = "MULAI!";
+            elLat.className = "text-rose-600 animate-pulse font-black";
+          } else {
+            let daysToWed = (3 - curDay + 7) % 7;
+            if (daysToWed === 0 && curHour >= 13) daysToWed = 7;
+            const nextWed = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToWed, 12, 0, 0);
+            const diff = nextWed - now;
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24)), h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / 1000 / 60) % 60), s = Math.floor((diff / 1000) % 60);
+            elLat.innerHTML = d > 0 ? `${d}Hr ${h}Jm` : `${h}j ${m}m ${s}d`;
+            elLat.className = "text-emerald-600 font-black";
+          }
+
+          // 2. Hitung Mundur Hari Pramuka (14 Agustus)
+          const elPram = document.getElementById('countdown-pramuka');
+          const isPramukaDay = now.getMonth() === 7 && now.getDate() === 14;
+          
+          if (isPramukaDay) {
+            elPram.innerHTML = "HARI INI!";
+            elPram.className = "text-rose-600 animate-pulse font-black";
+          } else {
+            let pramDate = new Date(now.getFullYear(), 7, 14); // 7 = Agustus
+            if (now > pramDate && now.getDate() !== 14) pramDate.setFullYear(now.getFullYear() + 1);
+            const diffP = pramDate - now;
+            elPram.innerHTML = `${Math.ceil(diffP / (1000 * 60 * 60 * 24))} Hr Lagi`;
+            elPram.className = "text-indigo-600 font-black";
+          }
+        }, 1000);
+      }
+
       function getSortedQuests() {
         return [...state.quests].sort((a, b) => {
           const numA = parseInt(a.poin);
@@ -1338,12 +1393,13 @@
           if (isNumA && isNumB) return numA - numB;
           if (isNumA) return -1;
           if (isNumB) return 1;
-          return a.id.localeCompare(b.id);
+            return a.id.localeCompare(b.id);
         });
       }
 
       window.onload = async () => {
         loadAppIdentity();
+        initCountdowns();
 
         if (!supabaseClient) {
           updateNetworkStatus();
@@ -2170,13 +2226,29 @@
         if (!container) return;
         
         let acts = [];
+
+        // --- MENGAMBIL TOP 3 SISWA TERAKTIF ---
+        if (state.students && state.students.length > 0) {
+            const topActive = [...state.students]
+                .sort((a, b) => getLeaderboardScore(b) - getLeaderboardScore(a))
+                .slice(0, 3);
+            
+            if (topActive.length > 0) {
+                const topNames = topActive.map((s, idx) => `#${idx + 1} ${s.name}`).join(", ");
+                acts.push({ icon: '🌟', text: `Pramuka Teraktif: ${topNames}` });
+            }
+        }
+        // --------------------------------------
+
         if(state.finances.length > 0) acts.push({ icon: '💸', text: `Kas Regu ${state.finances[0].reguName}: ${state.finances[0].description}` });
         if(state.shopClaims.length > 0) acts.push({ icon: '🎁', text: `Kedai: ${state.shopClaims[0].itemName} (${state.shopClaims[0].status})` });
         if(state.reguSanctionsLog.length > 0) acts.push({ icon: '⚠️', text: `Disiplin: ${state.reguSanctionsLog[0].reason}` });
         
-        if(acts.length < 3 && state.students.length > 0) {
-            state.students.slice(0,3).forEach(s => {
-                if(s.xpHistory.length > 0 && acts.length < 3) acts.push({ icon: '⭐', text: `XP ${s.name}: ${s.xpHistory[0].reason}` });
+        // Menampilkan riwayat aktivitas XP terbaru sebagai pelengkap
+        if(acts.length < 4 && state.students.length > 0) {
+            const recentStudents = [...state.students].filter(s => s.xpHistory && s.xpHistory.length > 0);
+            recentStudents.slice(0, 4 - acts.length).forEach(s => {
+                acts.push({ icon: '⭐', text: `Aktivitas ${s.name}: ${s.xpHistory[0].reason}` });
             });
         }
         
@@ -3327,7 +3399,7 @@ ${r.stat.totalScore}
             </div>
 
             <div class="relative mt-4 pt-3 border-t border-slate-100">
-                <input type="text" oninput="handleAttSearch(this.value)" placeholder="Cari nama anggota untuk di-absen..." class="w-full py-2 px-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 text-xs">
+                <input type="text" oninput="handleAttSearch(this.value)" placeholder="Cari nama atau regu..." class="w-full py-2 px-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 text-xs">
             </div>
         </div>
         <div id="att-list" class="space-y-2"></div>`;
@@ -3372,9 +3444,10 @@ ${r.stat.totalScore}
         switchAdminSection("attendance");
       }
 
-      function handleAttSearch(val) {
+function handleAttSearch(val) {
         const resBox = document.getElementById("att-list");
-        const filtered = state.students.filter((s) => s.name.toLowerCase().includes(val.toLowerCase()));
+        const q = val.toLowerCase();
+        const filtered = state.students.filter((s) => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
         resBox.innerHTML = filtered
           .map((s) => {
             const dayLogs = state.attendanceLog[tempAttDate] || {};
@@ -3472,7 +3545,7 @@ ${r.stat.totalScore}
         <div class="mb-4">
             <div class="flex items-center border-2 border-slate-200 rounded-xl px-3 bg-slate-50 focus-within:border-indigo-500 transition-all">
                 <i class="fa-solid fa-magnifying-glass text-slate-400 mr-2"></i>
-                <input type="text" id="admin-stud-search" value="${currentStudentSearchQuery}" oninput="searchAdminSiswa(this.value)" placeholder="Cari nama anggota pramuka..." class="w-full py-3 bg-transparent font-bold text-slate-800 focus:outline-none text-xs">
+                <input type="text" id="admin-stud-search" value="${currentStudentSearchQuery}" oninput="searchAdminSiswa(this.value)" placeholder="Cari nama atau regu..." class="w-full py-3 bg-transparent font-bold text-slate-800 focus:outline-none text-xs">
             </div>
         </div>
 
@@ -3489,7 +3562,7 @@ ${r.stat.totalScore}
       function applyAdminSiswaFilter() {
         const container = document.getElementById("admin-students-container");
         const q = currentStudentSearchQuery.toLowerCase();
-        const filtered = state.students.filter((s) => s.name.toLowerCase().includes(q));
+        const filtered = state.students.filter((s) => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
 
         if (filtered.length === 0) {
           container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500 font-bold bg-white rounded-xl border border-dashed">Siswa tidak ditemukan.</div>`;
@@ -3940,6 +4013,7 @@ ${r.stat.totalScore}
         <div class="card-3d p-4 bg-white mb-6 border-l-4 border-l-emerald-500">
             <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Luluskan SKU (Langsung / Kolektif)</h4>
             <div class="space-y-3">
+                <input type="text" oninput="filterSkuTarget(this.value)" placeholder="🔍 Cari nama atau regu..." class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:border-emerald-500 focus:outline-none">
                 <select id="direct-sku-target" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
                     <option value="" disabled selected>Pilih Siswa atau Regu (Ketik nama untuk mencari)...</option>
                     <optgroup label="Kolektif Regu">
@@ -3960,14 +4034,39 @@ ${r.stat.totalScore}
         <div class="card-3d p-4 bg-white mb-6 border-l-4 border-l-amber-500">
             <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Bonus Prestasi (XP Bebas)</h4>
             <div class="space-y-3">
+                <input type="text" oninput="filterBonusTarget(this.value)" placeholder="🔍 Cari nama atau regu..." class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:border-amber-500 focus:outline-none">
                 <select id="bonus-student" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
-                    ${state.students.map((s) => `<option value="${s.id}">${s.name} (${s.lifetimeXP} Lvl XP)</option>`).join("")}
+                    ${state.students.map((s) => `<option value="${s.id}">${s.name} (${s.regu} • ${s.lifetimeXP} XP)</option>`).join("")}
                 </select>
                 <input type="text" id="bonus-reason" placeholder="Cth: Menjadi Petugas Upacara" class="w-full text-xs font-semibold border-2 border-slate-200 rounded-xl p-3">
                 <select id="bonus-amount" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50"><option value="10">+10 XP (Ringan)</option><option value="25">+25 XP (Sedang)</option><option value="50">+50 XP (Tinggi)</option></select>
                 <button onclick="giveBonus()" class="btn-3d btn-primary w-full text-[10px] h-10 min-h-0">BERIKAN BONUS</button>
             </div>
         </div>`;
+      }
+
+      function filterSkuTarget(val) {
+        const q = val.toLowerCase();
+        const sel = document.getElementById("direct-sku-target");
+        const filteredRegus = Object.keys(state.regus).filter(r => r.toLowerCase().includes(q) || "regu".includes(q));
+        const filteredStudents = state.students.filter(s => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
+        
+        sel.innerHTML = `
+            <option value="" disabled selected>Pilih Siswa atau Regu (Ketik nama untuk mencari)...</option>
+            <optgroup label="Kolektif Regu">
+                ${filteredRegus.map((r) => `<option value="r_${r}">Semua Anggota Regu ${r}</option>`).join("")}
+            </optgroup>
+            <optgroup label="Siswa Individu">
+                ${filteredStudents.map((s) => `<option value="s_${s.id}">${s.name} (${s.regu})</option>`).join("")}
+            </optgroup>
+        `;
+      }
+
+      function filterBonusTarget(val) {
+        const q = val.toLowerCase();
+        const sel = document.getElementById("bonus-student");
+        const filteredStudents = state.students.filter(s => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
+        sel.innerHTML = filteredStudents.map((s) => `<option value="${s.id}">${s.name} (${s.regu} • ${s.lifetimeXP} XP)</option>`).join("");
       }
 
       async function directApproveSKU() {
@@ -4076,6 +4175,7 @@ ${r.stat.totalScore}
         <div class="card-3d p-4 bg-white mb-6">
             <h4 class="font-extrabold text-slate-800 text-xs mb-3 uppercase tracking-wider border-b pb-1">Aksi Restitusi (Pemulihan Koin Regu)</h4>
             <div class="space-y-3">
+                <input type="text" oninput="filterRestRegu(this.value)" placeholder="🔍 Cari regu..." class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2.5 bg-slate-50 focus:border-emerald-500 focus:outline-none">
                 <select id="rest-regu" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-2 bg-slate-50">
                     ${Object.keys(state.regus)
                       .map(
@@ -4159,6 +4259,20 @@ ${r.stat.totalScore}
         }
 
         el.innerHTML = html + `</div>`;
+      }
+
+      function filterSancTarget(val) {
+        const q = val.toLowerCase();
+        const sel = document.getElementById("sanc-student");
+        const filteredStudents = state.students.filter(s => s.name.toLowerCase().includes(q) || s.regu.toLowerCase().includes(q));
+        sel.innerHTML = filteredStudents.map((s) => `<option value="${s.id}">${s.name} (${s.regu})</option>`).join("");
+      }
+
+      function filterRestRegu(val) {
+        const q = val.toLowerCase();
+        const sel = document.getElementById("rest-regu");
+        const filteredRegus = Object.keys(state.regus).filter(r => r.toLowerCase().includes(q) || "regu".includes(q));
+        sel.innerHTML = filteredRegus.map((rName) => `<option value="${rName}">Regu ${rName} (Sisa denda: ${state.regus[rName].totalLostCoins} koin)</option>`).join("");
       }
 
       async function executeSanction() {
