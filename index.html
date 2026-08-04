@@ -4802,6 +4802,26 @@ function handleAttSearch(val) {
             </div>
             <button onclick="exportRaporCSV()" class="btn-3d btn-emerald w-full text-[10px] h-10 min-h-0"><i class="fa-solid fa-file-excel mr-1"></i> UNDUH RAPOR (CSV)</button>
         </div>
+
+        <div class="mb-4 mt-6">
+            <h3 class="title-font font-black text-lg text-slate-800">Cetak Blanko Administrasi</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase">Cetak Format Kosong Sesuai Filter Kelas/Regu di Atas</p>
+        </div>
+        <div class="card-3d bg-white p-4 mb-5 border-l-4 border-l-emerald-500">
+            <div class="space-y-3 mb-4">
+                <label class="block text-[10px] font-bold text-slate-500 mb-1">Pilih Jenis Blanko</label>
+                <select id="blanko-type" class="w-full text-xs font-bold border-2 border-slate-200 rounded-xl p-3 bg-slate-50">
+                    <option value="absensi_ganjil">1. Absensi (Juli - Desember) + Regu</option>
+                    <option value="absensi_genap">1. Absensi (Januari - Juni) + Regu</option>
+                    <option value="iuran_regu">2. Ceklis Iuran Anggota Regu</option>
+                    <option value="sku_kelas">3. Ceklis Pencapaian SKU Per Kelas</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="exportBlanko('csv')" class="btn-3d bg-emerald-100 text-emerald-700 w-full text-[10px] h-10 min-h-0 border border-emerald-300 shadow-none hover:bg-emerald-200"><i class="fa-solid fa-file-excel mr-1"></i> EXCEL (CSV)</button>
+                <button onclick="exportBlanko('png')" class="btn-3d btn-emerald w-full text-[10px] h-10 min-h-0"><i class="fa-solid fa-image mr-1"></i> GAMBAR A4 (PNG)</button>
+            </div>
+        </div>
         
         <div class="space-y-3">`;
 
@@ -4924,19 +4944,15 @@ function handleAttSearch(val) {
         container.style.left = '-9999px';
         container.style.top = '0';
         container.style.width = '1200px';
-        // Background hijau ala hutan/alam pramuka
-        container.style.background = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%25\' height=\'100%25\'%3E%3Cdefs%3E%3ClinearGradient id=\'g\' x1=\'0%25\' y1=\'0%25\' x2=\'0%25\' y2=\'100%25\'%3E%3Cstop offset=\'0%25\' stop-color=\'%23059669\'/%3E%3Cstop offset=\'100%25\' stop-color=\'%230f766e\'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'url(%23g)\'/%3E%3C/svg%3E")';
-        container.style.padding = '40px';
+        container.style.background = '#f8fafc'; // Warna background bersih dan simpel
+        container.style.padding = '50px';
         container.style.fontFamily = '"Nunito", sans-serif';
         container.style.boxSizing = 'border-box';
-        container.style.overflow = 'hidden';
 
         const getRankHtml = (students, type) => {
           let html = '';
-          const rankColors = ['#facc15', '#cbd5e1', '#d97706']; // Gold, Silver, Bronze
-          const rankShadows = ['#ca8a04', '#94a3b8', '#92400e'];
+          const rankColors = ['#eab308', '#94a3b8', '#b45309']; 
           const themeColor = type === 'Putra' ? '#3b82f6' : '#ec4899';
-          const themeBg = type === 'Putra' ? '#eff6ff' : '#fdf2f8';
 
           for (let i = 0; i < 3; i++) {
             if (!students[i]) continue;
@@ -4946,40 +4962,26 @@ function handleAttSearch(val) {
             const avatarStr = s.avatarEmoji.startsWith('data:image') ? `<img src="${s.avatarEmoji}" style="width:100%; height:100%; object-fit:cover;">` : s.avatarEmoji;
 
             html += `
-              <div style="background: white; border-radius: 20px; padding: 15px 25px; margin-bottom: 20px; display: flex; align-items: center; border: 4px solid ${rankColors[i]}; position: relative;">
-                <!-- Rank Badge Kiri -->
-                <div style="position: absolute; left: -25px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center;">
-                  <div style="width: 50px; height: 50px; background: ${rankColors[i]}; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 900; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); z-index: 2;">${i + 1}</div>
-                  <div style="display:flex; justify-content:center; margin-top: -5px; gap: 4px;">
-                    <div style="width:14px; height:25px; background:${rankShadows[i]}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%);"></div>
-                    <div style="width:14px; height:25px; background:${rankShadows[i]}; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%);"></div>
-                  </div>
-                </div>
+              <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; border-left: 8px solid ${rankColors[i]}; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative;">
+                
+                <div style="width: 45px; height: 45px; background: ${rankColors[i]}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; color: white; margin-right: 20px;">#${i + 1}</div>
 
-                <!-- Avatar Box -->
-                <div style="margin-left: 30px; width: 90px; height: 90px; border-radius: 50%; background: ${themeBg}; border: 5px solid ${themeColor}; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; flex-shrink: 0; box-shadow: inset 0 3px 6px rgba(0,0,0,0.1);">
+                <div style="width: 70px; height: 70px; border-radius: 50%; background: #f1f5f9; border: 3px solid ${themeColor}; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; flex-shrink: 0;">
                   ${avatarStr}
                 </div>
 
-                <!-- Text Info -->
-                <div style="margin-left: 25px; flex: 1;">
-                  <div style="font-size: 1.6rem; font-weight: 900; color: #1e293b; margin-bottom: 4px; font-family:'Fredoka', sans-serif;">${s.name}</div>
-                  <div style="font-size: 1.1rem; font-weight: 800; color: ${themeColor}; margin-bottom: 12px;">Regu ${s.regu}</div>
-                  <div style="display: flex; gap: 12px;">
-                    <div style="background: #10b981; color: white; padding: 6px 10px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; flex:1; text-align:center; box-shadow: 0 3px 0 #059669;">Hadir:<br><span style="font-size:1.2rem;">${att.percent}%</span></div>
-                    <div style="background: ${themeColor}; color: white; padding: 6px 10px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; flex:1; text-align:center; box-shadow: 0 3px 0 ${type === 'Putra' ? '#2563eb' : '#db2777'};">SKU:<br><span style="font-size:1.2rem;">${skuCount}/30</span></div>
-                    <div style="background: #f59e0b; color: white; padding: 6px 10px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; flex:1; text-align:center; box-shadow: 0 3px 0 #d97706;">XP:<br><span style="font-size:1.2rem;">${s.awardScore}</span></div>
+                <div style="margin-left: 20px; flex: 1;">
+                  <div style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: 4px; font-family:'Fredoka', sans-serif;">${s.name}</div>
+                  <div style="font-size: 1rem; font-weight: 700; color: #64748b; margin-bottom: 8px;">Regu ${s.regu}</div>
+                  <div style="display: flex; gap: 10px;">
+                    <span style="background: #ecfdf5; color: #059669; padding: 4px 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem;">Hadir: ${att.percent}%</span>
+                    <span style="background: ${type === 'Putra' ? '#eff6ff' : '#fdf2f8'}; color: ${themeColor}; padding: 4px 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem;">SKU: ${skuCount}/30</span>
+                    <span style="background: #fef3c7; color: #d97706; padding: 4px 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem;">Total: ${s.awardScore} XP</span>
                   </div>
-                </div>
-
-                <!-- Medal Kanan Kecil -->
-                <div style="position: absolute; right: 25px; top: 15px; text-align:center;">
-                  <div style="font-size: 2rem;">🏅</div>
-                  <div style="font-weight: 900; color: #94a3b8; font-size: 1.5rem; margin-top: -5px;">${i + 1}</div>
                 </div>
               </div>`;
           }
-          if (students.length === 0) html = `<div style="text-align:center; padding: 30px; font-weight:bold; color:#64748b; font-size: 1.2rem;">Belum ada data perolehan XP.</div>`;
+          if (students.length === 0) html = `<div style="text-align:center; padding: 30px; font-weight:bold; color:#94a3b8; font-size: 1.1rem;">Belum ada data aktivitas.</div>`;
           return html;
         };
 
@@ -4987,58 +4989,25 @@ function handleAttSearch(val) {
         const dateStr = `${today.getDate()} ${['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][today.getMonth()]} ${today.getFullYear()}`;
 
         container.innerHTML = `
-          <!-- Header Teks 3D -->
-          <div style="text-align:center; margin-bottom: 40px; position: relative; z-index: 10;">
-            <h1 style="font-family:'Fredoka', sans-serif; font-size: 5rem; color: #fbbf24; text-shadow: -3px -3px 0 #78350f, 3px -3px 0 #78350f, -3px 3px 0 #78350f, 3px 3px 0 #78350f, 0 8px 0 #451a03; margin:0; letter-spacing: 3px;">PRAMUKA TERGIAT</h1>
-            <div style="display: inline-block; background: linear-gradient(to bottom, #b45309, #78350f); color: white; padding: 12px 50px; border-radius: 40px; border: 4px solid #fcd34d; font-weight: 900; font-size: 1.6rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transform: translateY(-10px);">
-              PERIODE: ${monthLabel.toUpperCase()}
-            </div>
+          <div style="text-align:center; margin-bottom: 40px;">
+            <h1 style="font-family:'Fredoka', sans-serif; font-size: 3.5rem; color: #1e293b; margin:0; letter-spacing: 1px;">PENGHARGAAN PRAMUKA</h1>
+            <p style="font-size: 1.2rem; color: #64748b; margin: 10px 0 0 0; font-weight: 700; text-transform: uppercase;">PERIODE AKTIVITAS: ${monthLabel}</p>
           </div>
 
-          <div style="display: flex; justify-content: space-between; gap: 30px; margin-bottom: 30px;">
-            <!-- Kolom Putra -->
-            <div style="flex: 1; background: #fafafa; border-radius: 30px; padding: 30px; border: 8px solid #60a5fa; box-shadow: inset 0 0 0 6px white, 0 15px 30px rgba(0,0,0,0.2); position: relative; padding-top: 50px;">
-              <div style="position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 10px 40px; border-radius: 20px; font-family:'Fredoka', sans-serif; font-size: 2.5rem; font-weight: 900; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px;">
-                 <span style="font-size:2rem; color:#fcd34d;">⭐</span> PUTRA <span style="font-size:2rem; color:#fcd34d;">⭐</span>
-              </div>
+          <div style="display: flex; justify-content: space-between; gap: 40px; margin-bottom: 30px;">
+            <div style="flex: 1;">
+              <h2 style="font-family:'Fredoka', sans-serif; color: #3b82f6; font-size:1.8rem; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;"><i class="fa-solid fa-mars"></i> TERGIAT PUTRA</h2>
               ${getRankHtml(topPutra, 'Putra')}
-              <div style="background: #3b82f6; color: white; text-align: center; padding: 15px; border-radius: 15px; font-weight: 800; font-size: 1.2rem; box-shadow: 0 4px 0 #2563eb;">
-                🏆 Terus semangat! Jadilah Pramuka terbaik setiap hari! ✨
-              </div>
             </div>
 
-            <!-- Kolom Putri -->
-            <div style="flex: 1; background: #fafafa; border-radius: 30px; padding: 30px; border: 8px solid #f472b6; box-shadow: inset 0 0 0 6px white, 0 15px 30px rgba(0,0,0,0.2); position: relative; padding-top: 50px;">
-              <div style="position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: #ec4899; color: white; padding: 10px 40px; border-radius: 20px; font-family:'Fredoka', sans-serif; font-size: 2.5rem; font-weight: 900; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 15px;">
-                 <span style="font-size:2rem; color:#fcd34d;">⭐</span> PUTRI <span style="font-size:2rem; color:#fcd34d;">⭐</span>
-              </div>
+            <div style="flex: 1;">
+              <h2 style="font-family:'Fredoka', sans-serif; color: #ec4899; font-size:1.8rem; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;"><i class="fa-solid fa-venus"></i> TERGIAT PUTRI</h2>
               ${getRankHtml(topPutri, 'Putri')}
-              <div style="background: #ec4899; color: white; text-align: center; padding: 15px; border-radius: 15px; font-weight: 800; font-size: 1.2rem; box-shadow: 0 4px 0 #db2777;">
-                ❤️ Kreatif, Peduli, Berprestasi! Itulah Pramuka Putri! ✨
-              </div>
             </div>
           </div>
 
-          <!-- Footer ala Papan Kayu -->
-          <div style="background: linear-gradient(to bottom, #92400e, #78350f); border-radius: 20px; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border: 4px solid #b45309; box-shadow: 0 10px 25px rgba(0,0,0,0.4); color: white;">
-              <div style="display: flex; align-items: center; gap: 15px;">
-                  <div style="font-size: 2.5rem; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 15px;">📅</div>
-                  <div>
-                      <div style="font-size: 1rem; font-weight: 700; color: #fcd34d;">Update Terakhir</div>
-                      <div style="font-size: 1.4rem; font-weight: 900;">${dateStr}</div>
-                  </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 15px; border-left: 2px solid rgba(255,255,255,0.2); border-right: 2px solid rgba(255,255,255,0.2); padding: 0 40px;">
-                  <div style="font-size: 2.5rem; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 15px;">⏱️</div>
-                  <div>
-                      <div style="font-size: 1rem; font-weight: 700; color: #fcd34d;">Data Dihitung dari</div>
-                      <div style="font-size: 1.4rem; font-weight: 900;">${monthCode === 'all' ? 'Semua Periode' : 'Periode Terpilih'}</div>
-                  </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 15px;">
-                  <div style="font-size: 2.5rem; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 15px;">⚜️</div>
-                  <div style="font-size: 1.4rem; font-weight: 900; color: #fef3c7;">Ukir Prestasi, Raih Masa Depan!</div>
-              </div>
+          <div style="margin-top: 30px; text-align: center; border-top: 2px dashed #cbd5e1; padding-top: 20px; color: #64748b; font-size: 1rem; font-weight: 600;">
+              Dicetak pada: ${dateStr} | Gugus Depan SDN 4 Rambutan
           </div>
         `;
 
@@ -5058,6 +5027,114 @@ function handleAttSearch(val) {
             document.body.removeChild(container);
             btn.innerHTML = originalText;
             btn.disabled = false;
+        }
+      }
+
+      async function exportBlanko(format) {
+        const type = document.getElementById("blanko-type").value;
+        const kelasFilter = filterRaporKelas; // Mengambil filter yang aktif dari menu atas
+        const reguFilter = filterRaporRegu;
+
+        let students = state.students;
+        if (kelasFilter !== "Semua") students = students.filter(s => s.kelas === kelasFilter);
+        if (reguFilter !== "Semua") students = students.filter(s => s.regu === reguFilter);
+
+        students.sort((a, b) => a.name.localeCompare(b.name));
+
+        let title = "";
+        let cols = [];
+
+        if (type.startsWith("absensi")) {
+            title = type === "absensi_ganjil" ? "Blanko Absensi (Juli - Des)" : "Blanko Absensi (Jan - Jun)";
+            let months = type === "absensi_ganjil" ? ["Jul", "Agu", "Sep", "Okt", "Nov", "Des"] : ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"];
+            cols = ["No", "Nama", "Regu", "L/P"];
+            months.forEach(m => {
+                for(let i=1; i<=4; i++) cols.push(`${m} M${i}`);
+            });
+        } else if (type === "iuran_regu") {
+            title = "Blanko Ceklis Iuran Regu";
+            cols = ["No", "Nama", "Regu"];
+            for(let i=1; i<=16; i++) cols.push(`P-${i}`);
+        } else if (type === "sku_kelas") {
+            title = "Blanko Pencapaian SKU";
+            cols = ["No", "Nama"];
+            for(let i=1; i<=30; i++) cols.push(`${i}`);
+        }
+
+        if (format === 'csv') {
+            let csv = "\ufeff" + cols.join(";") + "\r\n";
+            students.forEach((s, idx) => {
+                let row = [idx + 1, s.name];
+                if(type !== "sku_kelas") row.push(s.regu);
+                if(type.startsWith("absensi")) row.push(s.gender === "Putri" ? "P" : "L");
+                
+                let emptyColsCount = cols.length - row.length;
+                for(let i=0; i<emptyColsCount; i++) row.push("");
+                csv += `"${row.join('";"')}"` + "\r\n";
+            });
+            const link = document.createElement("a");
+            link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
+            link.download = `${title}_Kelas_${kelasFilter}_Regu_${reguFilter}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            showToast("Blanko diekspor ke Excel (CSV)!", "✅");
+        } else if (format === 'png') {
+            showToast("Sedang membuat blanko gambar...", "⏳");
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+            container.style.top = '0';
+            container.style.width = '1200px'; 
+            container.style.background = '#ffffff';
+            container.style.padding = '40px';
+            container.style.fontFamily = 'Arial, sans-serif';
+            container.style.color = '#000';
+            
+            let html = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; font-size: 24px; text-transform: uppercase;">${title}</h2>
+                    <p style="margin: 5px 0 0; font-size: 16px;">Gugus Depan SDN 4 Rambutan | Kelas: ${kelasFilter} | Regu: ${reguFilter}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr>
+                            ${cols.map(c => `<th style="border: 1px solid #000; padding: 8px 4px; font-size: 11px; background: #f1f5f9; text-align: center;">${c}</th>`).join("")}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${students.map((s, idx) => {
+                            let rHtml = `<tr><td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 11px;">${idx+1}</td>`;
+                            rHtml += `<td style="border: 1px solid #000; padding: 6px; font-size: 11px; white-space: nowrap;">${s.name}</td>`;
+                            if(type !== "sku_kelas") rHtml += `<td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 11px;">${s.regu}</td>`;
+                            if(type.startsWith("absensi")) rHtml += `<td style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 11px;">${s.gender === "Putri" ? "P" : "L"}</td>`;
+                            
+                            let emptyColsCount = cols.length - (type === "sku_kelas" ? 2 : type.startsWith("absensi") ? 4 : 3);
+                            for(let i=0; i<emptyColsCount; i++) {
+                                rHtml += `<td style="border: 1px solid #000; padding: 6px;"></td>`;
+                            }
+                            rHtml += `</tr>`;
+                            return rHtml;
+                        }).join("")}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = html;
+            document.body.appendChild(container);
+
+            try {
+                const canvas = await html2canvas(container, { scale: 2 });
+                const link = document.createElement('a');
+                link.download = `${title}_Kelas_${kelasFilter}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast("Blanko berhasil dicetak (PNG)!", "🎉");
+            } catch (err) {
+                console.error(err);
+                showToast("Gagal mencetak gambar blanko.", "❌");
+            } finally {
+                document.body.removeChild(container);
+            }
         }
       }
 
