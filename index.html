@@ -664,6 +664,16 @@
           </h3>
           <div class="space-y-3 mb-4">
             <input type="hidden" id="form-mission-id" />
+            <input type="hidden" id="form-mission-stamp-data" />
+            <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div id="form-mission-stamp-preview" class="w-12 h-12 rounded-xl bg-white border-2 border-indigo-200 flex items-center justify-center overflow-hidden text-2xl shrink-0 shadow-inner">
+                🏆
+              </div>
+              <div class="flex-1">
+                <label class="block text-[10px] font-bold text-slate-600 mb-1">Upload Logo Stempel</label>
+                <input type="file" id="form-mission-stamp" accept="image/*" class="w-full text-[9px] file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+              </div>
+            </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-xs font-bold text-slate-600">Poin/Kode</label>
@@ -1176,6 +1186,15 @@
         }
       });
 
+      document.getElementById("form-mission-stamp").addEventListener("change", async function () {
+        const file = this.files[0];
+        if (file) {
+          const base64Data = await resizeImage(file);
+          document.getElementById("form-mission-stamp-data").value = base64Data;
+          document.getElementById("form-mission-stamp-preview").innerHTML = renderAvatar(base64Data);
+        }
+      });
+
       // Struktur Absen Constant (Dipindahkan ke atas agar dapat diakses semua fungsi)
       const attendanceTypes = {
         ontime: { label: "Hadir", xp: 8, color: "bg-emerald-500" },
@@ -1623,6 +1642,7 @@
               desc: q.desc,
               diff: q.diff,
               xp: q.xp,
+              stampImage: q.stamp_image,
             }));
             state.shopItems = (shopData || []).map((s) => ({
               id: s.id.toString(),
@@ -2658,6 +2678,7 @@ ${r.stat.totalScore}
                 <button onclick="switchStudentTab('misi')" id="st-tab-misi" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🗺️ Misi SKU</button>
                 <button onclick="switchStudentTab('regu')" id="st-tab-regu" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🛡️ Regu</button>
                 <button onclick="switchStudentTab('toko')" id="st-tab-toko" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🎁 Kedai</button>
+                <button onclick="switchStudentTab('koleksi')" id="st-tab-koleksi" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🏆 Stempel</button>
             </div>
         </div>
         <div class="p-6 pb-20" id="student-content-panel"></div>`;
@@ -2670,7 +2691,7 @@ ${r.stat.totalScore}
 
       function switchStudentTab(tab) {
         activeStudentTab = tab;
-        ["profil", "misi", "regu", "toko"].forEach((t) => {
+        ["profil", "misi", "regu", "toko", "koleksi"].forEach((t) => {
           const btn = document.getElementById(`st-tab-${t}`);
           if (btn)
             btn.className = `flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all ${t === tab ? "bg-amber-800 text-white" : "text-slate-500"}`;
@@ -2704,7 +2725,41 @@ ${r.stat.totalScore}
           else if (tab === "misi") renderStudentMisi(panel);
           else if (tab === "regu") renderStudentRegu(panel);
           else if (tab === "toko") renderStudentToko(panel);
+          else if (tab === "koleksi") renderStudentKoleksi(panel);
         }
+      }
+
+      function renderStudentKoleksi(el) {
+        const u = state.currentUser;
+        let html = `
+        <div class="mb-4">
+            <h3 class="title-font font-black text-lg text-slate-800">Koleksi Stempel SKU</h3>
+            <p class="text-[10px] font-bold text-slate-500 uppercase">Kumpulkan stempel sebagai bukti lulus SKU!</p>
+        </div>
+        <div class="grid grid-cols-3 gap-3 pb-6">`;
+
+        getSortedQuests().forEach((q) => {
+          const isUnlocked = u.completedQuests.some((cq) => cq.id === q.id && cq.status === "completed");
+          const stampHtml = renderAvatar(q.stampImage || "🏆");
+          const filterClass = isUnlocked ? "" : "grayscale opacity-50";
+          const bgClass = isUnlocked ? "bg-emerald-50 border-emerald-300" : "bg-slate-100 border-slate-200";
+          const iconStatus = isUnlocked ? '<div class="absolute -top-2 -right-2 bg-emerald-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm"><i class="fa-solid fa-check"></i></div>' : '<div class="absolute -top-2 -right-2 bg-slate-400 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm"><i class="fa-solid fa-lock"></i></div>';
+
+          html += `
+            <div class="card-3d flex flex-col items-center p-3 relative ${bgClass}">
+                ${iconStatus}
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-3xl sm:text-4xl mb-2 overflow-hidden shadow-inner bg-white border-2 border-slate-100 transition-all ${filterClass}">
+                    ${stampHtml}
+                </div>
+                <div class="text-center w-full">
+                    <div class="text-[9px] font-black bg-slate-800 text-white px-1.5 py-0.5 rounded uppercase mb-1 inline-block">SKU ${q.poin}</div>
+                    <div class="text-[8px] font-bold text-slate-500 leading-tight line-clamp-2 w-full truncate" title="${q.title}">${q.title}</div>
+                </div>
+            </div>`;
+        });
+
+        html += `</div>`;
+        el.innerHTML = html;
       }
 
       // Fungsi Statistik Presensi Murni dari Log Sesi
@@ -3839,6 +3894,8 @@ function handleAttSearch(val) {
           ["id", "poin", "xp", "title", "desc", "diff"].forEach(
             (f) => (document.getElementById("form-mission-" + f).value = q[f]),
           );
+          document.getElementById("form-mission-stamp-data").value = q.stampImage || "";
+          document.getElementById("form-mission-stamp-preview").innerHTML = renderAvatar(q.stampImage || "🏆");
         } else {
           document.getElementById("mission-modal-title").innerText = "Tambah Misi";
           document.getElementById("form-mission-id").value = "";
@@ -3847,7 +3904,10 @@ function handleAttSearch(val) {
           document.getElementById("form-mission-title").value = "";
           document.getElementById("form-mission-desc").value = "";
           document.getElementById("form-mission-diff").value = "Mudah";
+          document.getElementById("form-mission-stamp-data").value = "";
+          document.getElementById("form-mission-stamp-preview").innerHTML = "🏆";
         }
+        document.getElementById("form-mission-stamp").value = "";
       }
       function closeAdminMissionModal() {
         document.getElementById("admin-mission-modal").classList.add("hidden");
@@ -3860,10 +3920,12 @@ function handleAttSearch(val) {
         const title = document.getElementById("form-mission-title").value.trim(),
           desc = document.getElementById("form-mission-desc").value.trim(),
           diff = document.getElementById("form-mission-diff").value;
+        const stampImage = document.getElementById("form-mission-stamp-data").value;
+
         if (!poin || !title || !desc || isNaN(xp)) return showToast("Isi semua data!", "⚠️");
 
         const targetId = id || "q-" + Date.now();
-        const { error } = await DatabaseService.upsertQuest({ id: targetId, poin, xp, title, desc: desc, diff });
+        const { error } = await DatabaseService.upsertQuest({ id: targetId, poin, xp, title, desc: desc, diff, stamp_image: stampImage });
         if (error) return showToast("Gagal menyimpan misi ke Cloud!", "❌");
 
         if (id) {
@@ -3874,10 +3936,11 @@ function handleAttSearch(val) {
             q.title = title;
             q.desc = desc;
             q.diff = diff;
+            q.stampImage = stampImage;
           }
           showToast("Misi diperbarui di Cloud!", "✅");
         } else {
-          state.quests.push({ id: targetId, poin, xp, title, desc, diff });
+          state.quests.push({ id: targetId, poin, xp, title, desc, diff, stampImage });
           showToast("Misi baru ditambahkan!", "✅");
         }
         closeAdminMissionModal();
