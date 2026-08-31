@@ -122,6 +122,14 @@
         box-shadow: 0 6px 0 #e2e8f0;
         transition: all 150ms ease;
       }
+      .card-3d:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 9px 0 #cbd5e1;
+      }
+      .card-3d:active {
+        transform: translateY(2px);
+        box-shadow: 0 3px 0 #cbd5e1;
+      }
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -2324,11 +2332,12 @@
             </div>
 
             <div class="card-3d p-5 bg-white shadow-xl border-amber-100">
-                <h2 class="title-font font-extrabold text-lg text-slate-800 mb-1 text-center">Portal Anggota</h2>
-                <div class="relative mt-3">
+                <h2 class="title-font font-extrabold text-xl text-amber-600 mb-1 text-center">Tenda Utama Penggalang ⛺</h2>
+                <p class="text-[10px] text-center font-bold text-slate-500 mb-2">Siap berpetualang hari ini? Masukkan namamu!</p>
+                <div class="relative mt-2">
                     <div class="flex items-center border-2 border-slate-200 rounded-xl px-3 bg-slate-50 focus-within:border-amber-500 transition-all">
-                        <i class="fa-solid fa-search text-slate-400 mr-2"></i>
-                        <input type="text" id="login-search" oninput="handleLoginSearch(this.value)" placeholder="Cari namamu di sini..." class="w-full py-3.5 bg-transparent font-bold text-slate-800 focus:outline-none text-sm">
+                        <i class="fa-solid fa-search text-amber-500 mr-2"></i>
+                        <input type="text" id="login-search" oninput="handleLoginSearch(this.value)" placeholder="Ketik namamu di sini, Kak..." class="w-full py-3.5 bg-transparent font-bold text-slate-800 focus:outline-none text-sm">
                     </div>
                     <div id="autocomplete-list" class="absolute w-full mt-1 bg-white border-2 border-slate-200 rounded-xl shadow-2xl max-h-48 overflow-y-auto z-30 hidden"></div>
                 </div>
@@ -2657,14 +2666,14 @@ ${r.stat.totalScore}
                 </button>
             </div>
             <div class="flex items-center gap-4 mt-2">
-                <div class="relative">
+                <div class="relative group cursor-pointer hover:scale-105 transition-transform">
                     <div class="w-20 h-20 bg-white rounded-full overflow-hidden flex items-center justify-center border-4 border-amber-400 shadow-xl text-5xl">${renderAvatar(u.avatarEmoji)}</div>
-                    <button onclick="openAvatarModal()" class="absolute -bottom-1 -right-1 w-7 h-7 bg-amber-500 text-white rounded-full border-2 border-white flex items-center justify-center text-xs shadow"><i class="fa-solid fa-pencil"></i></button>
+                    <button onclick="openAvatarModal()" class="absolute -bottom-1 -right-1 w-7 h-7 bg-amber-500 text-white rounded-full border-2 border-white flex items-center justify-center text-xs shadow hover:bg-amber-600"><i class="fa-solid fa-pencil"></i></button>
                 </div>
                 <div class="flex-1">
-                    <h2 class="title-font font-black text-xl text-white leading-tight">${u.name}</h2>
-                    <p class="text-[10px] font-bold text-amber-200 uppercase tracking-wider mt-0.5">${u.jabatan} • Regu ${u.regu}</p>
-                    <div class="flex items-center gap-2 mt-2"><span class="lvl-badge-${lvl.id} text-[9px] font-black px-2.5 py-1 rounded-full uppercase border border-white/20">${lvl.name}</span></div>
+                    <h2 class="title-font font-black text-2xl text-white leading-tight drop-shadow-md">Halo, Kak ${u.name}! 👋</h2>
+                    <p class="text-[11px] font-bold text-amber-100 uppercase tracking-wider mt-1 bg-amber-900/40 inline-block px-2.5 py-1 rounded-full border border-amber-600/50">${u.jabatan} • Jagoan Regu ${u.regu}</p>
+                    <div class="flex items-center gap-2 mt-2"><span class="lvl-badge-${lvl.id} text-[10px] font-black px-3 py-1 rounded-full uppercase border border-white/20 shadow-sm">${lvl.name}</span></div>
                 </div>
             </div>
             <div class="mt-5 bg-amber-950/60 p-3.5 rounded-2xl border border-amber-700/50">
@@ -2673,12 +2682,12 @@ ${r.stat.totalScore}
             </div>
         </div>
         <div class="px-6 -mt-6 relative z-20">
-            <div class="card-3d bg-white p-1.5 flex justify-between items-center shadow-lg gap-1 overflow-x-auto no-scrollbar">
-                <button onclick="switchStudentTab('profil')" id="st-tab-profil" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">⛺ Profil</button>
-                <button onclick="switchStudentTab('misi')" id="st-tab-misi" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🗺️ Misi SKU</button>
-                <button onclick="switchStudentTab('regu')" id="st-tab-regu" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🛡️ Regu</button>
-                <button onclick="switchStudentTab('toko')" id="st-tab-toko" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🎁 Kedai</button>
-                <button onclick="switchStudentTab('koleksi')" id="st-tab-koleksi" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all">🏆 Stempel</button>
+            <div class="card-3d bg-white p-2 flex justify-between items-center shadow-lg gap-2 overflow-x-auto no-scrollbar">
+                <button onclick="switchStudentTab('profil')" id="st-tab-profil" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all hover:scale-105 active:scale-95">⛺ Rapor-ku</button>
+                <button onclick="switchStudentTab('misi')" id="st-tab-misi" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all hover:scale-105 active:scale-95">🗺️ Misi SKU</button>
+                <button onclick="switchStudentTab('regu')" id="st-tab-regu" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all hover:scale-105 active:scale-95">🛡️ Regu-ku</button>
+                <button onclick="switchStudentTab('toko')" id="st-tab-toko" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all hover:scale-105 active:scale-95">🎁 Kedai</button>
+                <button onclick="switchStudentTab('koleksi')" id="st-tab-koleksi" class="flex-1 min-w-[70px] py-2.5 text-[9px] font-black rounded-xl uppercase transition-all hover:scale-105 active:scale-95">🏆 Stempel</button>
             </div>
         </div>
         <div class="p-6 pb-20" id="student-content-panel"></div>`;
